@@ -1,127 +1,332 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# BoladoBSPWM · instalador del tema (monocromo + ámbar, barra pill única)
-# Estilo basado en AutoBspwm (S4vitar). Instala ESTE tema tal cual.
+#  ╭───────────────────────────────────────────────────────────────╮
+#  │  BoladoBSPWM — instalador                                       │
+#  │  Tema bspwm monocromo + barra polybar pill · prompt rounded     │
+#  │  https://github.com/bolado-dev/BoladoBSPWM                      │
+#  ╰───────────────────────────────────────────────────────────────╯
+#
+#  Uso:  ./install.sh [opciones]
 #
 
-if [ "$(whoami)" == "root" ]; then
-    echo "[!] No ejecutes este script como root. Saliendo."
-    exit 1
-fi
+set -uo pipefail
 
-# Ruta del repo (donde vive este script), aunque se invoque desde otro sitio
-ruta="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VERSION="1.0"
+REPO="https://github.com/bolado-dev/BoladoBSPWM"
+RUTA="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-green="\033[1;32m"; amber="\033[1;33m"; red="\033[1;31m"; reset="\033[0m"
-log()  { echo -e "${amber}[*]${reset} $1"; }
-ok()   { echo -e "${green}[+]${reset} $1"; }
-warn() { echo -e "${red}[!]${reset} $1"; }
+# ── Opciones ───────────────────────────────────────────────────────
+DO_DEPS=1; DO_ROOT=1; DO_HARDWARE=1; ASSUME_YES=0; HARDWARE_ONLY=0
 
-# ─────────────────────────────────────────────
-# 1. Dependencias (runtime del tema)
-# ─────────────────────────────────────────────
-log "Instalando dependencias..."
-sudo apt update
-sudo apt install -y \
-    bspwm sxhkd polybar kitty rofi picom feh \
-    flameshot brightnessctl playerctl pamixer i3lock \
-    fastfetch imagemagick wmname libnotify-bin x11-utils \
-    pavucontrol network-manager-gnome blueman \
-    zsh zsh-syntax-highlighting zsh-autosuggestions \
-    fonts-hack fonts-font-awesome \
-    python3 pciutils x11-xserver-utils || warn "Algún paquete falló; revisa arriba."
+usage() {
+    cat <<EOF
+BoladoBSPWM v$VERSION — instalador
 
-# ─────────────────────────────────────────────
-# 2. Backup de la config previa
-# ─────────────────────────────────────────────
-stamp="$(date +%Y%m%d-%H%M%S)"
-for d in bspwm sxhkd polybar kitty bin; do
-    if [ -e "$HOME/.config/$d" ]; then
-        mv "$HOME/.config/$d" "$HOME/.config/$d.bak-$stamp"
-        log "Backup: ~/.config/$d -> ~/.config/$d.bak-$stamp"
-    fi
+Uso: ./install.sh [opciones]
+
+  -y, --yes           Modo desatendido (no pregunta)
+      --no-deps       No instalar paquetes apt
+      --no-root       No configurar el prompt de root
+      --no-hardware   No adaptar al hardware (batería/red/monitores/drivers/touchpad)
+      --hardware-only Solo re-adaptar al hardware (no copia configs ni instala)
+  -h, --help          Muestra esta ayuda
+
+Sin opciones: instalación completa interactiva.
+EOF
+    exit 0
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -y|--yes)        ASSUME_YES=1 ;;
+        --no-deps)       DO_DEPS=0 ;;
+        --no-root)       DO_ROOT=0 ;;
+        --no-hardware)   DO_HARDWARE=0 ;;
+        --hardware-only) HARDWARE_ONLY=1 ;;
+        -h|--help)       usage ;;
+        *) echo "Opción desconocida: $1 (usa --help)"; exit 1 ;;
+    esac
+    shift
 done
 
-# ─────────────────────────────────────────────
-# 3. Copiar configs del tema
-# ─────────────────────────────────────────────
-log "Copiando configs a ~/.config ..."
-mkdir -p "$HOME/.config"
-cp -r "$ruta"/Config/* "$HOME/.config/"
-ok "bspwm, sxhkd, polybar, kitty y bin copiados."
-
-# Tema de rofi (se referencia con -theme en sxhkdrc)
-cp "$ruta"/rofi/rofi-mono.rasi "$HOME/.config/"
-ok "Tema rofi instalado en ~/.config/rofi-mono.rasi"
-
-# ─────────────────────────────────────────────
-# 4. Zsh + Powerlevel10k (tema del prompt)
-# ─────────────────────────────────────────────
-[ -e "$HOME/.zshrc" ]   && cp "$HOME/.zshrc"   "$HOME/.zshrc.bak-$stamp"
-[ -e "$HOME/.p10k.zsh" ] && cp "$HOME/.p10k.zsh" "$HOME/.p10k.zsh.bak-$stamp"
-
-cp "$ruta"/zsh/.zshrc          "$HOME/.zshrc"
-cp "$ruta"/zsh/.p10k.zsh       "$HOME/.p10k.zsh"
-cp "$ruta"/zsh/p10k-mono.zsh   "$HOME/.config/p10k-mono.zsh"
-
-# Asegurar que .zshrc carga el override de color monocromo+ámbar
-if ! grep -q "p10k-mono.zsh" "$HOME/.zshrc"; then
-    echo '[[ -f ~/.config/p10k-mono.zsh ]] && source ~/.config/p10k-mono.zsh' >> "$HOME/.zshrc"
+# ── Estilo / logging ───────────────────────────────────────────────
+if [ -t 1 ]; then
+    B=$'\e[1m'; DIM=$'\e[2m'; R=$'\e[0m'
+    WHITE=$'\e[97m'; GREY=$'\e[90m'; GREEN=$'\e[32m'; YELLOW=$'\e[33m'; RED=$'\e[31m'
+else
+    B=""; DIM=""; R=""; WHITE=""; GREY=""; GREEN=""; YELLOW=""; RED=""
 fi
 
-# Motor de Powerlevel10k
-if [ ! -d "$HOME/.powerlevel10k" ]; then
-    log "Clonando Powerlevel10k..."
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.powerlevel10k"
-fi
-ok "Prompt p10k (monocromo + blanco) configurado."
+STEP=0; STEPS=0
+step()  { STEP=$((STEP+1)); printf "\n${B}${WHITE}[%d/%d] %s${R}\n" "$STEP" "$STEPS" "$1"; }
+ok()    { printf "  ${GREEN}✓${R} %s\n" "$1"; }
+info()  { printf "  ${GREY}·${R} %s\n" "$1"; }
+warn()  { printf "  ${YELLOW}!${R} %s\n" "$1"; }
+err()   { printf "  ${RED}✗${R} %s\n" "$1"; }
+die()   { err "$1"; exit 1; }
+confirm() {
+    [ "$ASSUME_YES" -eq 1 ] && return 0
+    printf "  ${YELLOW}?${R} %s ${DIM}[s/N]${R} " "$1"; read -r r; [[ "$r" =~ ^[sSyY] ]]
+}
 
-# Prompt de ROOT: mismo override (se vuelve rojo solo por el EUID==0 interno)
-log "Configurando prompt de root..."
-sudo install -Dm644 "$ruta"/zsh/p10k-mono.zsh /root/.config/p10k-mono.zsh
-sudo grep -q 'p10k-mono.zsh' /root/.zshrc 2>/dev/null || \
-    echo '[[ -f ~/.config/p10k-mono.zsh ]] && source ~/.config/p10k-mono.zsh' | sudo tee -a /root/.zshrc >/dev/null
-[ -d /root/.powerlevel10k ] || sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/.powerlevel10k
-ok "Prompt de root configurado (acento rojo)."
+banner() {
+    printf '%s' "$WHITE$B"
+    cat <<'BANNER'
+   ___      _         _      ___ ___ _____      ____  __
+  | _ ) ___| |__ _ __| |___ | _ ) __/ __\ \    / /  \/  |
+  | _ \/ _ \ / _` / _` / _ \| _ \__ \ _| \ \/\/ /| |\/| |
+  |___/\___/_\__,_\__,_\___/|___/___/_|   \_/\_/ |_|  |_|
+BANNER
+    printf '%s' "$R"
+    printf "  ${GREY}tema bspwm · monocromo + blanco · polybar pill · prompt rounded${R}\n"
+    printf "  ${GREY}v%s · %s${R}\n" "$VERSION" "$REPO"
+}
 
-# kitty_start (fastfetch + zsh) usado por kitty como shell
-if [ -f "$ruta"/scripts/kitty_start ]; then
-    sudo cp "$ruta"/scripts/kitty_start /usr/local/bin/ && sudo chmod +x /usr/local/bin/kitty_start
-fi
+# ── Pre-flight ─────────────────────────────────────────────────────
+preflight() {
+    [ "$(id -u)" -eq 0 ] && die "No ejecutes el instalador como root (usa tu usuario; pedirá sudo cuando haga falta)."
+    command -v apt >/dev/null || die "Este instalador asume Debian/Kali (apt no encontrado)."
+    command -v sudo >/dev/null || die "Se necesita sudo."
+}
 
-# ─────────────────────────────────────────────
-# 5. Wallpaper + carpetas
-# ─────────────────────────────────────────────
-mkdir -p "$HOME/Imágenes" "$HOME/ScreenShots"
-cp "$ruta"/Wallpaper/wp-pc.png "$HOME/Imágenes/" 2>/dev/null && ok "Wallpaper copiado a ~/Imágenes/wp-pc.png"
+# ════════════════════════════════════════════════════════════════════
+#  Pasos
+# ════════════════════════════════════════════════════════════════════
+install_deps() {
+    step "Instalando dependencias"
+    sudo apt update -qq
+    sudo apt install -y \
+        bspwm sxhkd polybar kitty rofi picom feh \
+        flameshot brightnessctl playerctl pamixer i3lock \
+        fastfetch imagemagick wmname libnotify-bin x11-utils \
+        pavucontrol network-manager-gnome blueman \
+        zsh zsh-syntax-highlighting zsh-autosuggestions \
+        fonts-hack fonts-font-awesome \
+        python3 pciutils x11-xserver-utils \
+        && ok "Paquetes instalados" || warn "Algún paquete falló (revisa la salida de apt)"
+}
 
-# ─────────────────────────────────────────────
-# 6. Permisos de ejecución
-# ─────────────────────────────────────────────
-chmod +x "$HOME"/.config/bspwm/bspwmrc 2>/dev/null
-chmod +x "$HOME"/.config/bspwm/scripts/* 2>/dev/null
-chmod +x "$HOME"/.config/polybar/launch.sh 2>/dev/null
-chmod +x "$HOME"/.config/polybar/scripts/* 2>/dev/null
-chmod +x "$HOME"/.config/bin/*.sh 2>/dev/null
-ok "Permisos asignados."
+backup_configs() {
+    step "Copia de seguridad de tu config actual"
+    local stamp d any=0
+    stamp="$(date +%Y%m%d-%H%M%S)"
+    for d in bspwm sxhkd polybar kitty picom bin; do
+        if [ -e "$HOME/.config/$d" ]; then
+            mv "$HOME/.config/$d" "$HOME/.config/$d.bak-$stamp"; any=1
+            info "~/.config/$d → ~/.config/$d.bak-$stamp"
+        fi
+    done
+    [ -e "$HOME/.zshrc" ]   && cp "$HOME/.zshrc"   "$HOME/.zshrc.bak-$stamp"   && any=1
+    [ -e "$HOME/.p10k.zsh" ] && cp "$HOME/.p10k.zsh" "$HOME/.p10k.zsh.bak-$stamp" && any=1
+    [ "$any" -eq 1 ] && ok "Backups creados (sufijo .bak-$stamp)" || ok "Nada que respaldar"
+}
 
-# ─────────────────────────────────────────────
-# 6.5 Adaptación al hardware (batería, red, monitores, drivers)
-# ─────────────────────────────────────────────
-if [ -f "$ruta"/hardware.sh ]; then
-    log "Adaptando el tema a tu hardware..."
-    bash "$ruta"/hardware.sh
-fi
+copy_configs() {
+    step "Instalando configuración del tema"
+    mkdir -p "$HOME/.config"
+    cp -r "$RUTA"/Config/* "$HOME/.config/"
+    ok "bspwm · sxhkd · polybar · kitty · picom · bin"
+    cp "$RUTA"/rofi/rofi-mono.rasi "$HOME/.config/"
+    ok "tema rofi (~/.config/rofi-mono.rasi)"
+}
 
-# ─────────────────────────────────────────────
-# 7. Shell por defecto a zsh (opcional)
-# ─────────────────────────────────────────────
-if [ "$SHELL" != "$(command -v zsh)" ]; then
-    log "Cambiando shell por defecto a zsh (pedirá tu contraseña)..."
-    chsh -s "$(command -v zsh)" || warn "No se pudo cambiar el shell; hazlo manual con: chsh -s \$(which zsh)"
-fi
+setup_zsh() {
+    step "Configurando zsh + Powerlevel10k"
+    cp "$RUTA"/zsh/.zshrc        "$HOME/.zshrc"
+    cp "$RUTA"/zsh/.p10k.zsh     "$HOME/.p10k.zsh"
+    cp "$RUTA"/zsh/p10k-mono.zsh "$HOME/.config/p10k-mono.zsh"
+    grep -q 'p10k-mono.zsh' "$HOME/.zshrc" || \
+        echo '[[ -f ~/.config/p10k-mono.zsh ]] && source ~/.config/p10k-mono.zsh' >> "$HOME/.zshrc"
+    if [ ! -d "$HOME/.powerlevel10k" ]; then
+        info "clonando Powerlevel10k…"
+        git clone -q --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.powerlevel10k"
+    fi
+    [ -f "$RUTA"/scripts/kitty_start ] && \
+        sudo install -m755 "$RUTA"/scripts/kitty_start /usr/local/bin/kitty_start
+    ok "prompt rounded (acento blanco) listo"
+    if [ "$SHELL" != "$(command -v zsh)" ] && confirm "¿Poner zsh como shell por defecto?"; then
+        chsh -s "$(command -v zsh)" && ok "shell por defecto → zsh" || warn "no se pudo cambiar el shell"
+    fi
+}
 
-echo
-ok "BoladoBSPWM instalado."
-echo -e "${amber}Cierra sesión y entra en bspwm, o recarga con: super+alt+r${reset}"
-command -v notify-send >/dev/null && notify-send "BoladoBSPWM instalado 🎨" "Tema monocromo + ámbar listo."
+setup_root_prompt() {
+    [ "$DO_ROOT" -eq 1 ] || return 0
+    step "Configurando prompt de root (acento rojo)"
+    sudo install -Dm644 "$RUTA"/zsh/p10k-mono.zsh /root/.config/p10k-mono.zsh
+    sudo grep -q 'p10k-mono.zsh' /root/.zshrc 2>/dev/null || \
+        echo '[[ -f ~/.config/p10k-mono.zsh ]] && source ~/.config/p10k-mono.zsh' | sudo tee -a /root/.zshrc >/dev/null
+    [ -d /root/.powerlevel10k ] || sudo git clone -q --depth=1 https://github.com/romkatv/powerlevel10k.git /root/.powerlevel10k
+    ok "root usará el mismo prompt (en rojo por EUID=0)"
+}
+
+set_permissions() {
+    step "Asignando permisos"
+    chmod +x "$HOME"/.config/bspwm/bspwmrc        2>/dev/null
+    chmod +x "$HOME"/.config/bspwm/scripts/*      2>/dev/null
+    chmod +x "$HOME"/.config/polybar/launch.sh    2>/dev/null
+    chmod +x "$HOME"/.config/polybar/scripts/*    2>/dev/null
+    chmod +x "$HOME"/.config/bin/*.sh             2>/dev/null
+    mkdir -p "$HOME/ScreenShots" "$HOME/Imágenes"
+    [ -f "$RUTA"/Wallpaper/wp-pc.png ] && cp "$RUTA"/Wallpaper/wp-pc.png "$HOME/Imágenes/"
+    ok "ejecutables + carpetas (~/ScreenShots, wallpaper)"
+}
+
+# ── Adaptación a hardware ──────────────────────────────────────────
+CUR="$HOME/.config/polybar/current.ini"
+BSPWMRC="$HOME/.config/bspwm/bspwmrc"
+LAUNCH="$HOME/.config/polybar/launch.sh"
+PICOM="$HOME/.config/picom/picom.conf"
+
+# editor acotado del current.ini (lee BB_* del entorno; argv2 opcional)
+_polybar_py() {
+    python3 - "$CUR" "${1:-}" <<'PYEOF'
+import os, sys, re
+path = sys.argv[1]; extra = sys.argv[2] if len(sys.argv) > 2 else ""
+lines = open(path, encoding="utf-8").read().split("\n")
+def section_range(name):
+    start=None
+    for i,l in enumerate(lines):
+        s=l.strip()
+        if s=="["+name+"]": start=i; continue
+        if start is not None and s.startswith("[") and s.endswith("]"): return start,i
+    return (start,len(lines)) if start is not None else (None,None)
+def set_key(name,key,value):
+    a,b=section_range(name)
+    if a is None: return
+    pat=re.compile(r"^\s*"+re.escape(key)+r"\s*=")
+    for i in range(a,b):
+        if pat.match(lines[i]): lines[i]="{} = {}".format(key,value); return
+    lines.insert(a+1,"{} = {}".format(key,value))
+if os.environ.get("BB_REMOVE_BATTERY")=="1":
+    a,b=section_range("bar/pill")
+    if a is not None:
+        for i in range(a,b):
+            if lines[i].strip().startswith("modules-right"):
+                k,v=lines[i].split("=",1); toks=[t for t in v.split() if t!="battery"]; out=[]
+                for t in toks:
+                    if t=="sep" and (not out or out[-1]=="sep"): continue
+                    out.append(t)
+                while out and out[-1]=="sep": out.pop()
+                while out and out[0]=="sep": out.pop(0)
+                lines[i]=k+"= "+" ".join(out); break
+if os.environ.get("BB_BAT"): set_key("module/battery","battery",os.environ["BB_BAT"])
+if os.environ.get("BB_ADP"): set_key("module/battery","adapter",os.environ["BB_ADP"])
+if os.environ.get("BB_IFACE"): set_key("module/network","interface",os.environ["BB_IFACE"])
+nt=os.environ.get("BB_NETTYPE")
+if nt:
+    set_key("module/network","interface-type",nt)
+    if nt=="wired":
+        set_key("module/network","label-connected",'" %local_ip%"')
+        set_key("module/network","label-disconnected",'" sin red"')
+    else:
+        set_key("module/network","label-connected",'" %essid% %signal%%"')
+if extra=="pillmonitor": set_key("bar/pill","monitor","${env:MONITOR:}")
+open(path,"w",encoding="utf-8").write("\n".join(lines))
+PYEOF
+}
+
+adapt_hardware() {
+    [ "$DO_HARDWARE" -eq 1 ] || return 0
+    step "Adaptando al hardware"
+
+    # Batería
+    local bat adp
+    bat=$(ls /sys/class/power_supply/ 2>/dev/null | grep -iE '^BAT' | head -1)
+    adp=$(ls /sys/class/power_supply/ 2>/dev/null | grep -iE '^(ADP|AC)' | head -1)
+    if [ -z "$bat" ]; then
+        BB_REMOVE_BATTERY=1 _polybar_py; info "sin batería → módulo battery retirado"
+    else
+        BB_BAT="$bat" BB_ADP="${adp:-ADP0}" _polybar_py; info "batería $bat / ${adp:-ADP0}"
+    fi
+
+    # Red
+    local wifi="" iface="" d n
+    for d in /sys/class/net/*; do [ -d "$d/wireless" ] && wifi=$(basename "$d") && break; done
+    iface="$wifi"
+    if [ -z "$iface" ]; then
+        iface=$(ip route 2>/dev/null | awk '/^default/{print $5; exit}')
+        [ -z "$iface" ] && iface=$(ls /sys/class/net 2>/dev/null | grep -v '^lo$' | head -1)
+    fi
+    if [ -n "$iface" ]; then
+        if [ -n "$wifi" ]; then BB_IFACE="$iface" BB_NETTYPE="wireless" _polybar_py; info "wifi $iface"
+        else BB_IFACE="$iface" BB_NETTYPE="wired" _polybar_py; info "ethernet $iface"; fi
+    fi
+
+    # Touchpad
+    if grep -qiE 'touchpad' /proc/bus/input/devices 2>/dev/null && [ -f "$RUTA"/x11/30-touchpad.conf ]; then
+        sudo install -Dm644 "$RUTA"/x11/30-touchpad.conf /etc/X11/xorg.conf.d/30-touchpad.conf \
+            && info "touchpad: 2 dedos = click derecho (reinicia X)"
+    fi
+
+    # Drivers GPU
+    local gpu; gpu=$(lspci 2>/dev/null | grep -iE 'vga compatible|3d controller')
+    if echo "$gpu" | grep -qi nvidia; then
+        warn "GPU NVIDIA detectada"
+        confirm "¿Instalar driver NVIDIA + firmware?" && sudo apt install -y nvidia-driver firmware-misc-nonfree
+        if [ -f "$PICOM" ]; then grep -q '^backend' "$PICOM" && sudo sed -i 's/^backend.*/backend = "glx";/' "$PICOM" || echo 'backend = "glx";' >> "$PICOM"; fi
+    elif echo "$gpu" | grep -qiE 'amd|radeon'; then
+        confirm "GPU AMD: ¿instalar firmware + Mesa/Vulkan?" && sudo apt install -y firmware-amd-graphics mesa-vulkan-drivers
+    elif echo "$gpu" | grep -qi intel; then
+        info "GPU Intel (driver en kernel/Mesa)"
+    fi
+
+    # Monitores (solo con X activo)
+    if [ -n "${DISPLAY:-}" ]; then
+        local mons n; mapfile -t mons < <(xrandr --query 2>/dev/null | awk '/ connected/{print $1}')
+        n=${#mons[@]}
+        if [ "$n" -gt 1 ] && confirm "Detectados $n monitores (${mons[*]}). ¿Configurar disposición dual?"; then
+            local primary secondary pos line
+            read -rp "  → Monitor primario [${mons[0]}]: " primary;   primary=${primary:-${mons[0]}}
+            read -rp "  → Monitor secundario [${mons[1]}]: " secondary; secondary=${secondary:-${mons[1]}}
+            echo "    1) derecha  2) izquierda  3) encima  4) debajo"
+            read -rp "  → Posición del secundario [1]: " pos
+            case "$pos" in 2) pos="--left-of";; 3) pos="--above";; 4) pos="--below";; *) pos="--right-of";; esac
+            line="xrandr --output $primary --primary --auto --output $secondary --auto $pos $primary"
+            if grep -q '^xrandr --output' "$BSPWMRC"; then sed -i "s|^xrandr --output.*|$line|" "$BSPWMRC"
+            else sed -i "0,/^bspc monitor/s||$line\n\nbspc monitor|" "$BSPWMRC"; fi
+            grep -qE '^bspc monitor -d ' "$BSPWMRC" && sed -i "s|^bspc monitor -d .*|bspc monitor \"$primary\" -d 1 2 3 4 5\nbspc monitor \"$secondary\" -d 6 7 8 9 10|" "$BSPWMRC"
+            _polybar_py pillmonitor
+            cat > "$LAUNCH" <<'L'
+#!/usr/bin/env sh
+killall -q polybar
+while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
+for m in $(polybar -m | cut -d: -f1); do MONITOR=$m polybar pill -c ~/.config/polybar/current.ini & done
+L
+            chmod +x "$LAUNCH"; info "dual: $primary + $secondary ($pos), polybar por monitor"
+        fi
+    fi
+    ok "hardware adaptado"
+}
+
+finish() {
+    printf "\n${B}${GREEN}✓ BoladoBSPWM instalado${R}\n"
+    printf "${GREY}  • Cierra sesión y entra en bspwm (o recarga: super+alt+r)\n"
+    printf "  • Backups de tu config previa en ~/.config/*.bak-FECHA\n"
+    printf "  • Atajos: super+Return (kitty) · super+d (rofi) · super+shift+l (lock)${R}\n\n"
+    command -v notify-send >/dev/null && notify-send "BoladoBSPWM instalado" "Tema aplicado correctamente." 2>/dev/null || true
+}
+
+# ════════════════════════════════════════════════════════════════════
+main() {
+    banner
+    preflight
+
+    if [ "$HARDWARE_ONLY" -eq 1 ]; then
+        STEPS=1; adapt_hardware; finish; return
+    fi
+
+    STEPS=7; [ "$DO_DEPS" -eq 1 ] || STEPS=$((STEPS-1)); [ "$DO_ROOT" -eq 1 ] || STEPS=$((STEPS-1)); [ "$DO_HARDWARE" -eq 1 ] || STEPS=$((STEPS-1))
+
+    if ! confirm "Instalar BoladoBSPWM en este equipo?"; then echo "Cancelado."; exit 0; fi
+
+    [ "$DO_DEPS" -eq 1 ] && install_deps
+    backup_configs
+    copy_configs
+    setup_zsh
+    setup_root_prompt
+    set_permissions
+    adapt_hardware
+    finish
+}
+
+main "$@"

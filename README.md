@@ -19,27 +19,41 @@ del instalador de AutoBspwm (S4vitar).
 
 ## Instalación
 
+Un **único script** lo hace todo:
+
 ```bash
 cd ~/Themes/BoladoBSPWM
-./BoladoBSPWM.sh      # menú con banner
-# o directamente:
 ./install.sh
 ```
 
-El instalador:
-1. Instala dependencias (`apt`).
-2. Hace **backup** de tu config previa (`~/.config/<x>.bak-FECHA`).
+Opciones:
+
+```text
+-y, --yes           Modo desatendido (no pregunta)
+    --no-deps       No instalar paquetes apt
+    --no-root       No configurar el prompt de root
+    --no-hardware   No adaptar al hardware
+    --hardware-only Solo re-adaptar al hardware (no copia configs)
+-h, --help          Ayuda
+```
+
+El instalador, por fases:
+1. Dependencias (`apt`).
+2. **Backup** de tu config previa (`~/.config/<x>.bak-FECHA`).
 3. Copia los configs del tema a `~/.config/`.
 4. Configura zsh + Powerlevel10k (clona el motor si falta).
-5. Copia el wallpaper y crea `~/ScreenShots`.
-6. Asigna permisos.
-7. **Adapta el tema a tu hardware** (`hardware.sh`).
+5. Configura el **prompt de root** (mismo estilo, acento rojo).
+6. Permisos + wallpaper + `~/ScreenShots`.
+7. **Adapta al hardware** (batería, red, touchpad, monitores, drivers).
 8. (Opcional) pone zsh como shell por defecto.
 
-## Adaptación a hardware (`hardware.sh`)
+No ejecutar como root. Tras instalar: cerrar sesión y entrar en bspwm, o
+recargar con `super+alt+r`.
 
-Se ejecuta al final del instalador (o suelto con `./hardware.sh`) y ajusta los
-configs ya instalados según la máquina:
+## Adaptación a hardware
+
+Integrada en el instalador (o re-ejecutable con `./install.sh --hardware-only`),
+ajusta los configs según la máquina:
 
 - **Batería** — detecta el nombre real (`BAT0`/`BAT1`…) y el adaptador
   (`ADP0`/`AC`…). Si es un **sobremesa sin batería**, elimina el módulo
@@ -58,9 +72,6 @@ configs ya instalados según la máquina:
 
 > La parte de monitores necesita una sesión X activa; córrela dentro de bspwm.
 > Las de drivers/monitores son interactivas (preguntan antes de tocar nada).
-
-No ejecutar como root. Tras instalar: cerrar sesión y entrar en bspwm, o
-recargar con `super+alt+r`.
 
 ## Atajos principales
 
