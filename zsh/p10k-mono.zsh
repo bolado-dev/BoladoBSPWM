@@ -63,12 +63,13 @@ typeset -g POWERLEVEL9K_RIGHT_PROMPT_LAST_SEGMENT_END_SYMBOL=$''
 # Línea en blanco antes del prompt (más aire)
 typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
 
-# Fondos por segmento: rampa de grises + icono de sistema como burbuja ámbar
-typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=214               # burbuja ámbar
-typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=233               # icono oscuro encima
-typeset -g POWERLEVEL9K_DIR_BACKGROUND=237                   # ruta: gris medio
-typeset -g POWERLEVEL9K_DIR_FOREGROUND=215                   # texto ámbar claro
-typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=223
+# Fondos por segmento: rampa de grises (sin bloque ámbar)
+typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=236              # burbuja gris (antes ámbar)
+typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250              # icono claro neutro
+typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=$'\uf327'   # dragón de Kali (U+F327)
+typeset -g POWERLEVEL9K_DIR_BACKGROUND=237                  # ruta: gris medio
+typeset -g POWERLEVEL9K_DIR_FOREGROUND=252                  # texto neutro (poco ámbar)
+typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=215           # solo anchors en ámbar
 typeset -g POWERLEVEL9K_STATUS_OK_BACKGROUND=235
 typeset -g POWERLEVEL9K_STATUS_ERROR_BACKGROUND=235
 typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_BACKGROUND=236
