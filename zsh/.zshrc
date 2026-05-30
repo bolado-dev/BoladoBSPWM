@@ -152,6 +152,121 @@ function htb() {
 	sudo openvpn /home/alejandro/VPNs/htb.ovpn
 }
 
+# Pide pegar el "Copy as cURL" de una petición a labs.hackthebox.com
+# (DevTools -> Network -> clic dcho en la petición -> Copy -> Copy as cURL),
+# extrae el "Bearer <token>" y lo guarda en ~/.config/htb/token (chmod 600).
+# Imprime el token por stdout.
+function _htbimg_grab_token() {
+	emulate -L zsh
+	local tf="${XDG_CONFIG_HOME:-$HOME/.config}/htb/token"
+	print -u2 "Pega el 'Copy as cURL' de una petición a labs.hackthebox.com y pulsa Ctrl-D:"
+	local paste token
+	paste="$(cat)"
+	token="$(printf '%s' "$paste" | grep -oiP 'Bearer\s+\K[A-Za-z0-9._-]+' | head -1)"
+	if [[ -z "$token" ]]; then
+		print -u2 "No encontré ningún 'Bearer <token>' en lo que pegaste."
+		return 1
+	fi
+	mkdir -p "${tf:h}"
+	print -r -- "$token" > "$tf"
+	chmod 600 "$tf"
+	print -u2 "✓ Token guardado en $tf"
+	print -r -- "$token"
+}
+
+# Descarga el avatar de una máquina de HTB a partir de su enlace o nombre.
+# Uso:  htbimg <url-o-nombre> [salida]
+# Ej.:  htbimg 'https://app.hackthebox.com/machines/Photobomb?sort_by=created_at'
+#       htbimg Photobomb content/writeups/photobomb/cover.png
+# La 1ª vez pide el 'Copy as cURL' y guarda el token; luego lo reutiliza solo.
+# Si está definida $HTB_TOKEN, tiene prioridad sobre el fichero.
+function htbimg() {
+	emulate -L zsh
+	local input="$1"
+	if [[ -z "$input" ]]; then
+		print -u2 "Uso: htbimg <url-o-nombre-HTB> [salida]"
+		return 1
+	fi
+
+	# token: $HTB_TOKEN > fichero guardado > pedir 'Copy as cURL'.
+	local tf="${XDG_CONFIG_HOME:-$HOME/.config}/htb/token"
+	local token=""
+	if [[ -n "$HTB_TOKEN" ]]; then
+		token="$HTB_TOKEN"
+	elif [[ -r "$tf" ]]; then
+		token="$(<"$tf")"
+	fi
+	if [[ -z "$token" ]]; then
+		token="$(_htbimg_grab_token)" || return 1
+	fi
+
+	# slug = último segmento tras /machines/ (o el nombre tal cual), sin query.
+	local slug="${input##*/machines/}"
+	slug="${slug%%\?*}"
+	slug="${slug%%/*}"
+
+	local api="https://labs.hackthebox.com/api/v4/machine/profile/${slug}"
+
+	# Llama a la API; si el token guardado caducó, pide uno nuevo y reintenta.
+	local json
+	json="$(curl -sf -H "Authorization: Bearer ${token}" \
+		-H "Accept: application/json, text/plain, */*" \
+		-H "User-Agent: Mozilla/5.0" "$api")"
+	if [[ $? -ne 0 ]]; then
+		print -u2 "La API falló (token caducado/inválido o sin conexión). Pega un 'Copy as cURL' nuevo."
+		token="$(_htbimg_grab_token)" || return 1
+		json="$(curl -sf -H "Authorization: Bearer ${token}" \
+			-H "Accept: application/json, text/plain, */*" \
+			-H "User-Agent: Mozilla/5.0" "$api")" || {
+			print -u2 "Sigue fallando la API para '${slug}'."
+			return 1
+		}
+	fi
+
+	local avatar name
+	avatar="$(printf '%s' "$json" | python3 -c 'import sys,json; print(json.load(sys.stdin)["info"].get("avatar",""))' 2>/dev/null)"
+	name="$(printf '%s' "$json" | python3 -c 'import sys,json; print(json.load(sys.stdin)["info"].get("name",""))' 2>/dev/null)"
+	if [[ -z "$avatar" ]]; then
+		print -u2 "No encontré avatar en la respuesta de HTB para '${slug}'."
+		return 1
+	fi
+	# La API suele devolver /avatars/<hash>.png, pero HTB lo sirve en
+	# /storage/avatars/<hash>.png. Probamos varias rutas candidatas.
+	local -aU urls
+	if [[ "$avatar" == http* ]]; then
+		urls=("$avatar")
+	else
+		local fileimg="${avatar##*/}"
+		urls=(
+			"https://htb-mp-prod-public-storage.s3.eu-central-1.amazonaws.com/avatars/${fileimg}"
+			"https://labs.hackthebox.com/storage/avatars/${fileimg}"
+			"https://labs.hackthebox.com${avatar}"
+		)
+	fi
+
+	local out="$2"
+	if [[ -z "$out" ]]; then
+		local ext="${urls[1]##*.}"; ext="${ext%%\?*}"
+		[[ -z "$ext" || "$ext" == "${urls[1]}" ]] && ext="png"
+		out="${name:-$slug}.${ext}"
+	fi
+
+	# Descarga: prueba cada candidata, primero sin auth y luego con Bearer.
+	local u ok=0
+	for u in "${urls[@]}"; do
+		if curl -sfL -o "$out" "$u" 2>/dev/null \
+		|| curl -sfL -H "Authorization: Bearer ${token}" -o "$out" "$u" 2>/dev/null; then
+			ok=1; break
+		fi
+	done
+	if (( ! ok )); then
+		print -u2 "No pude descargar la imagen. avatar(API)=${avatar}"
+		print -u2 "Probé:"; printf '  %s\n' "${urls[@]}" >&2
+		return 1
+	fi
+	echo "✓ ${name:-$slug} -> ${out}  (desde ${u})"
+}
+
 # Finalize Powerlevel10k instant prompt. Should stay at the bottom of ~/.zshrc.
 (( ! ${+functions[p10k-instant-prompt-finalize]} )) || p10k-instant-prompt-finalize 
 
