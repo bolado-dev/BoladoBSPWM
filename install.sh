@@ -74,7 +74,15 @@ if [ ! -d "$HOME/.powerlevel10k" ]; then
     log "Clonando Powerlevel10k..."
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.powerlevel10k"
 fi
-ok "Prompt p10k (monocromo + ámbar) configurado."
+ok "Prompt p10k (monocromo + blanco) configurado."
+
+# Prompt de ROOT: mismo override (se vuelve rojo solo por el EUID==0 interno)
+log "Configurando prompt de root..."
+sudo install -Dm644 "$ruta"/zsh/p10k-mono.zsh /root/.config/p10k-mono.zsh
+sudo grep -q 'p10k-mono.zsh' /root/.zshrc 2>/dev/null || \
+    echo '[[ -f ~/.config/p10k-mono.zsh ]] && source ~/.config/p10k-mono.zsh' | sudo tee -a /root/.zshrc >/dev/null
+[ -d /root/.powerlevel10k ] || sudo git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /root/.powerlevel10k
+ok "Prompt de root configurado (acento rojo)."
 
 # kitty_start (fastfetch + zsh) usado por kitty como shell
 if [ -f "$ruta"/scripts/kitty_start ]; then
