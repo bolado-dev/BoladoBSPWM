@@ -25,14 +25,14 @@ typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=215
 
 # Contexto (user@host): gris; root resaltado en ámbar
 typeset -g POWERLEVEL9K_CONTEXT_FOREGROUND=245
-typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=214
+typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=196   # root en rojo (aviso)
 
 # Reloj y tiempo de ejecución: grises
 typeset -g POWERLEVEL9K_TIME_FOREGROUND=244
 typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=245
 
 # Prompt char: ámbar al ir bien, rojo al fallar (único color "vivo")
-typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=214
+typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=231
 typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=196
 
 # Status: ok en gris (sin verde), error en rojo
@@ -42,7 +42,7 @@ typeset -g POWERLEVEL9K_STATUS_OK_PIPE_FOREGROUND=245
 # Git/VCS en escala mono + ámbar para modificados
 typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=245
 typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=245
-typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=214
+typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=231
 
 # ─────────────────────────────────────────────
 #  Look REDONDEADO (rounded) + burbujas por segmento
@@ -69,7 +69,7 @@ typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250              # icono claro neutro
 typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=$'\uf327'   # dragón de Kali (U+F327)
 typeset -g POWERLEVEL9K_DIR_BACKGROUND=237                  # ruta: gris medio
 typeset -g POWERLEVEL9K_DIR_FOREGROUND=252                  # texto neutro (poco ámbar)
-typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=215           # solo anchors en ámbar
+typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=231           # anchors en blanco
 typeset -g POWERLEVEL9K_STATUS_OK_BACKGROUND=235
 typeset -g POWERLEVEL9K_STATUS_ERROR_BACKGROUND=235
 typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_BACKGROUND=236

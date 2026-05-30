@@ -17,7 +17,7 @@ configuration {
   bg-alt:    #1f1f1f;
   fg:        #f0f0f0;
   fg-muted:  #8a8a8a;
-  accent:    #ffb300;
+  accent:    #f0f0f0;
   urgent:    #e05561;
   dark:      #0d0d0d;
 
