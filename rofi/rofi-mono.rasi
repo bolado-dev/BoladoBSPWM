@@ -1,0 +1,96 @@
+/* ─────────────────────────────────────────────
+   Tema rofi monocromo + ámbar (a juego con polybar/kitty/p10k)
+   Uso: rofi -show drun -theme ~/.config/rofi-mono.rasi
+   ───────────────────────────────────────────── */
+
+configuration {
+  show-icons:          true;
+  drun-display-format: "{icon}  {name}";
+  display-drun:        "  apps";
+  display-run:         "  run";
+  display-window:      "  win";
+  modi:                "drun,run,window";
+}
+
+* {
+  bg:        #141414;
+  bg-alt:    #1f1f1f;
+  fg:        #f0f0f0;
+  fg-muted:  #8a8a8a;
+  accent:    #ffb300;
+  urgent:    #e05561;
+  dark:      #0d0d0d;
+
+  background-color: transparent;
+  text-color:       @fg;
+  font:             "Iosevka Nerd Font 12";
+}
+
+window {
+  background-color: @bg;
+  border:           0;
+  border-radius:    14px;
+  width:            38%;
+  padding:          0;
+}
+
+mainbox {
+  children: [ inputbar, listview ];
+  padding:  14px;
+  spacing:  12px;
+}
+
+inputbar {
+  background-color: @bg-alt;
+  border-radius:    10px;
+  padding:          12px 16px;
+  spacing:          10px;
+  children:         [ prompt, entry ];
+}
+
+prompt {
+  text-color: @accent;
+}
+
+entry {
+  text-color:        @fg;
+  placeholder:       "Buscar…";
+  placeholder-color: @fg-muted;
+}
+
+listview {
+  columns:      1;
+  lines:        8;
+  fixed-height: false;
+  scrollbar:    false;
+  spacing:      4px;
+}
+
+element {
+  padding:       10px 14px;
+  border-radius: 10px;
+  spacing:       12px;
+  text-color:    @fg;
+}
+
+element normal urgent { text-color: @urgent; }
+element normal active  { text-color: @accent; }
+
+element selected {
+  background-color: @accent;
+  text-color:       @dark;
+}
+element selected urgent {
+  background-color: @urgent;
+  text-color:       @dark;
+}
+
+element-icon {
+  size:           1.2em;
+  vertical-align: 0.5;
+}
+
+element-text {
+  vertical-align: 0.5;
+  text-color:     inherit;
+}

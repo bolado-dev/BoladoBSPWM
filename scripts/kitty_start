@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Mostrar fastfetch al abrir Kitty
+/usr/bin/fastfetch -c "$HOME/.config/fastfetch/config.jsonc" || true
+
+# Lanzar Zsh interactivo con Powerlevel10k
+exec /usr/bin/zsh -i
+
