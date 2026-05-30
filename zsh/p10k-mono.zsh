@@ -81,3 +81,14 @@ typeset -g POWERLEVEL9K_VCS_BACKGROUND=238                   # git: gris
 # Marco superior pegado a la burbuja (más limpio con el rounded)
 typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX='%242F╭'
 typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_PREFIX='%242F╰'
+
+# ─────────────────────────────────────────────
+#  ROOT: mismo estilo rounded pero con acento ROJO (aviso)
+#  (este mismo archivo se sourcea también desde /root)
+# ─────────────────────────────────────────────
+if [[ $EUID -eq 0 ]]; then
+  typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=88                                          # burbuja roja
+  typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=231
+  typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=203                                       # anchors rojo claro
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=196          # prompt char rojo
+fi
