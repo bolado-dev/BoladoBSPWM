@@ -43,3 +43,40 @@ typeset -g POWERLEVEL9K_STATUS_OK_PIPE_FOREGROUND=245
 typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=245
 typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=245
 typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=214
+
+# ─────────────────────────────────────────────
+#  Look REDONDEADO (rounded) + burbujas por segmento
+# ─────────────────────────────────────────────
+
+# Separadores semicirculares (rounded) en vez de los triángulos ''
+typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=$''      #
+typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=$''     #
+typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=$''   #
+typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=$''  #
+
+# Extremos del prompt redondeados (cápsula/pill)
+typeset -g POWERLEVEL9K_LEFT_PROMPT_FIRST_SEGMENT_START_SYMBOL=$''   #
+typeset -g POWERLEVEL9K_LEFT_PROMPT_LAST_SEGMENT_END_SYMBOL=$''      #
+typeset -g POWERLEVEL9K_RIGHT_PROMPT_FIRST_SEGMENT_START_SYMBOL=$''
+typeset -g POWERLEVEL9K_RIGHT_PROMPT_LAST_SEGMENT_END_SYMBOL=$''
+
+# Línea en blanco antes del prompt (más aire)
+typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
+
+# Fondos por segmento: rampa de grises + icono de sistema como burbuja ámbar
+typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=214               # burbuja ámbar
+typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=233               # icono oscuro encima
+typeset -g POWERLEVEL9K_DIR_BACKGROUND=237                   # ruta: gris medio
+typeset -g POWERLEVEL9K_DIR_FOREGROUND=215                   # texto ámbar claro
+typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=223
+typeset -g POWERLEVEL9K_STATUS_OK_BACKGROUND=235
+typeset -g POWERLEVEL9K_STATUS_ERROR_BACKGROUND=235
+typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_BACKGROUND=236
+typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=246
+typeset -g POWERLEVEL9K_CONTEXT_BACKGROUND=239
+typeset -g POWERLEVEL9K_CONTEXT_FOREGROUND=250
+typeset -g POWERLEVEL9K_VCS_BACKGROUND=238                   # git: gris
+
+# Marco superior pegado a la burbuja (más limpio con el rounded)
+typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX='%242F╭'
+typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_PREFIX='%242F╰'
