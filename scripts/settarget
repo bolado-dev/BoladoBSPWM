@@ -21,6 +21,9 @@ backup_hosts() {
 # Escribe un nuevo contenido (stdin) dentro del bloque marcado.
 write_block() {
   local tmp; tmp="$(mktemp)"
+  # Lee TODO el stdin una sola vez (no usar -s /dev/stdin: un pipe reporta tamaño 0)
+  local block; block="$(cat)"
+
   # Quita bloque previo (si existe)
   awk -v b="$TAG_BEGIN" -v e="$TAG_END" '
     BEGIN{skip=0}
@@ -29,14 +32,13 @@ write_block() {
     skip==0{print}
   ' "$HOSTS_FILE" > "$tmp"
 
-  # Añade bloque nuevo al final (si hay contenido en stdin)
-  if [[ -s /dev/stdin ]]; then
+  # Añade bloque nuevo al final (solo si llegó contenido por stdin)
+  if [[ -n "$block" ]]; then
     {
-      cat "$tmp"
       echo "$TAG_BEGIN"
-      cat
+      printf '%s\n' "$block"
       echo "$TAG_END"
-    } | tee "$tmp" >/dev/null
+    } >> "$tmp"
   fi
 
   backup_hosts
