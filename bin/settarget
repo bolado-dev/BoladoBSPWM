@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# settarget - Define el target activo (HTB/THM) en /etc/hosts y deja que
+# Polybar (modulo htb_target -> ~/.config/bin/htb_target.sh, interval=2) lo muestre.
+set -euo pipefail
+
+HOSTS_FILE="/etc/hosts"
+TAG_BEGIN="# [settarget] BEGIN"
+TAG_END="# [settarget] END"
+
+require_root() {
+  if [[ $EUID -ne 0 ]]; then
+    exec sudo -- "$0" "$@"
+  fi
+}
+
+backup_hosts() {
+  cp -f "$HOSTS_FILE" "${HOSTS_FILE}.bak-settarget"
+}
+
+# Reemplaza el bloque [settarget]. El contenido nuevo llega por stdin.
+# FIX: antes usaba `[[ -s /dev/stdin ]]`, que es FALSO para una tuberia
+# (los pipes reportan tamano 0), asi que el bloque nunca se escribia.
+write_block() {
+  local content tmp
+  content="$(cat)"            # consume TODO el stdin ("IP HOST")
+  tmp="$(mktemp)"
+  awk -v b="$TAG_BEGIN" -v e="$TAG_END" '
+    BEGIN{skip=0}
+    $0==b{skip=1; next}
+    $0==e{skip=0; next}
+    skip==0{print}
+  ' "$HOSTS_FILE" > "$tmp"
+  if [ -n "$content" ]; then
+    { echo "$TAG_BEGIN"; printf '%s\n' "$content"; echo "$TAG_END"; } >> "$tmp"
+  fi
+  backup_hosts
+  tee "$HOSTS_FILE" < "$tmp" >/dev/null
+  rm -f "$tmp"
+}
+
+read_block() {
+  awk -v b="$TAG_BEGIN" -v e="$TAG_END" '
+    $0==b{inblk=1; next}
+    $0==e{inblk=0; next}
+    inblk{print}
+  ' "$HOSTS_FILE" 2>/dev/null || true
+}
+
+norm_host() { tr '[:upper:]' '[:lower:]' <<<"$1" | tr -s ' '; }
+
+is_ip() { printf '%s' "$1" | grep -qE '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'; }
+
+cmd_help() {
+  cat <<EOF
+Uso:
+  settarget <IP> <HOST>      # Activa un target (acepta tambien <HOST> <IP>)
+  settarget list             # Muestra el bloque gestionado
+  settarget clear            # Borra el bloque gestionado
+EOF
+}
+
+main() {
+  case "${1:-}" in
+    help|-h|--help|"") cmd_help ;;
+
+    list) read_block ;;
+
+    clear)
+      require_root "$@"
+      printf '' | write_block
+      echo "✔ Target limpiado"
+      ;;
+
+    *)
+      [[ $# -ge 2 ]] || { echo "Uso: settarget <IP> <HOST>" >&2; exit 1; }
+      require_root "$@"
+      a="$1"; b="$(norm_host "$2")"
+      # Auto-detecta cual argumento es la IP (acepta cualquier orden)
+      if   is_ip "$a"; then ip="$a"; host="$b"
+      elif is_ip "$b"; then ip="$b"; host="$a"
+      else ip="$a"; host="$b"; fi
+      printf '%s %s\n' "$ip" "$host" | write_block
+      echo "✔ Target activo: $ip $host"
+      ;;
+  esac
+}
+
+main "$@"
