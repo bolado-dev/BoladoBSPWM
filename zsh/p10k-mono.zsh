@@ -16,7 +16,7 @@ typeset -g POWERLEVEL9K_MULTILINE_NEWLINE_PROMPT_SUFFIX='%242F─┤'
 typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_SUFFIX='%242F─╯'
 
 # OS icon: gris claro neutro
-typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250
+typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=255
 
 # Directorio: ámbar como acento principal
 typeset -g POWERLEVEL9K_DIR_FOREGROUND=214
@@ -65,8 +65,8 @@ typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
 
 # Fondos por segmento: rampa de grises (sin bloque ámbar)
 typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=236              # burbuja gris (antes ámbar)
-typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250              # icono claro neutro
-typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=$'\uf327'   # dragón de Kali (U+F327)
+typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=255              # icono claro neutro
+typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=$'\ue800'   # logo Bolado (U+E800)
 typeset -g POWERLEVEL9K_DIR_BACKGROUND=237                  # ruta: gris medio
 typeset -g POWERLEVEL9K_DIR_FOREGROUND=252                  # texto neutro (poco ámbar)
 typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=231           # anchors en blanco
