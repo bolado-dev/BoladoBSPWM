@@ -101,7 +101,7 @@ install_deps() {
         fastfetch imagemagick wmname libnotify-bin x11-utils \
         pavucontrol network-manager-gnome blueman wireplumber \
         zsh zsh-syntax-highlighting zsh-autosuggestions \
-        git curl lsd bat fzf xclip scrot openvpn \
+        git curl lsd bat fzf xclip scrot openvpn arandr autorandr \
         fonts-hack fonts-font-awesome fontconfig \
         python3 pciutils x11-xserver-utils \
         && ok "Paquetes instalados" || warn "Algún paquete falló (revisa la salida de apt)"
@@ -312,29 +312,32 @@ adapt_hardware() {
         info "GPU Intel (driver en kernel/Mesa)"
     fi
 
-    # Monitores (solo con X activo)
+    # Monitores: disposición visual con arandr + auto-aplicación con autorandr
     if [ -n "${DISPLAY:-}" ]; then
         local mons n; mapfile -t mons < <(xrandr --query 2>/dev/null | awk '/ connected/{print $1}')
         n=${#mons[@]}
-        if [ "$n" -gt 1 ] && confirm "Detectados $n monitores (${mons[*]}). ¿Configurar disposición dual?"; then
-            local primary secondary pos line
-            read -rp "  → Monitor primario [${mons[0]}]: " primary;   primary=${primary:-${mons[0]}}
-            read -rp "  → Monitor secundario [${mons[1]}]: " secondary; secondary=${secondary:-${mons[1]}}
-            echo "    1) derecha  2) izquierda  3) encima  4) debajo"
-            read -rp "  → Posición del secundario [1]: " pos
-            case "$pos" in 2) pos="--left-of";; 3) pos="--above";; 4) pos="--below";; *) pos="--right-of";; esac
-            line="xrandr --output $primary --primary --auto --output $secondary --auto $pos $primary"
-            if grep -q '^xrandr --output' "$BSPWMRC"; then sed -i "s|^xrandr --output.*|$line|" "$BSPWMRC"
-            else sed -i "0,/^bspc monitor/s||$line\n\nbspc monitor|" "$BSPWMRC"; fi
-            grep -qE '^bspc monitor -d ' "$BSPWMRC" && sed -i "s|^bspc monitor -d .*|bspc monitor \"$primary\" -d 1 2 3 4 5\nbspc monitor \"$secondary\" -d 6 7 8 9 10|" "$BSPWMRC"
+        if [ "$n" -gt 1 ]; then
+            if command -v arandr >/dev/null && confirm "Detectados $n monitores (${mons[*]}). ¿Abrir arandr para colocarlos arrastrando?"; then
+                info "Arrastra las pantallas, pulsa «Aplicar» y cierra arandr para continuar…"
+                arandr
+            fi
+            # Guardar el layout: autorandr lo restaura solo al arrancar o al (des)conectar
+            if command -v autorandr >/dev/null; then
+                autorandr --save default --force >/dev/null 2>&1 \
+                    && info "layout guardado (autorandr «default»); se auto-aplica al arrancar/conectar" \
+                    || warn "no se pudo guardar el layout con autorandr"
+            else
+                warn "autorandr no está instalado: el layout no se auto-aplicará"
+            fi
+            # Repartir los 10 desktops (romanos) entre los dos primeros monitores
+            local primary secondary
+            primary=$(xrandr --query | awk '/ connected primary/{print $1; exit}'); [ -z "$primary" ] && primary="${mons[0]}"
+            secondary=$(printf '%s\n' "${mons[@]}" | grep -vx "$primary" | head -1)
+            if [ -n "$secondary" ] && grep -qE '^bspc monitor -d ' "$BSPWMRC"; then
+                sed -i "s|^bspc monitor -d .*|bspc monitor \"$primary\" -d I II III IV V\nbspc monitor \"$secondary\" -d VI VII VIII IX X|" "$BSPWMRC"
+                info "desktops: $primary → I–V · $secondary → VI–X"
+            fi
             _polybar_py pillmonitor
-            cat > "$LAUNCH" <<'L'
-#!/usr/bin/env sh
-killall -q polybar
-while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
-for m in $(polybar -m | cut -d: -f1); do MONITOR=$m polybar pill -c ~/.config/polybar/current.ini & done
-L
-            chmod +x "$LAUNCH"; info "dual: $primary + $secondary ($pos), polybar por monitor"
         fi
     fi
     ok "hardware adaptado"
