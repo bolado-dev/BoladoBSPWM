@@ -105,6 +105,25 @@ ${G}  ────────────────────────�
   ${K}Next / Prev${R}                 $AR  Siguiente / anterior pista
   ${K}Stop${R}                        $AR  Detener reproducción
 
+${S}  TERMINAL · SPLITS  (kitty)${R}
+${G}  ──────────────────────────────────────────────────────────────${R}
+  ${K}Ctrl + Shift + \${R}            $AR  Dividir en vertical (panel derecho)
+  ${K}Ctrl + Shift + -${R}            $AR  Dividir en horizontal (panel inferior)
+  ${K}Ctrl + ← ↓ ↑ →${R}             $AR  Navegar entre paneles
+  ${K}Ctrl + Shift + W${R}            $AR  Cerrar panel
+  ${K}Ctrl + Shift + Z${R}            $AR  Zoom / alternar panel a pantalla completa
+  ${K}Ctrl + Shift + Enter${R}        $AR  Nuevo panel (layout actual)
+
+${S}  TERMINAL · TABS  (kitty)${R}
+${G}  ──────────────────────────────────────────────────────────────${R}
+  ${K}Ctrl + Shift + T${R}            $AR  Nueva tab (en el directorio actual)
+  ${K}Ctrl + Shift + →${R}            $AR  Tab siguiente
+  ${K}Ctrl + Shift + ←${R}            $AR  Tab anterior
+  ${K}Ctrl + Shift + Q${R}            $AR  Cerrar tab
+  ${K}Ctrl + Alt + T${R}              $AR  Renombrar tab
+  ${K}Ctrl + Shift + .${R}            $AR  Mover tab a la derecha
+  ${K}Ctrl + Shift + ,${R}            $AR  Mover tab a la izquierda
+
 ${D}${W}  ════════════════════════════════════════════════════════════════${R}
 ${G}  q / Esc para cerrar${R}
 

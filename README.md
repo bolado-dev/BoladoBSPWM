@@ -210,6 +210,29 @@ configs según la máquina:
 | `Next / Prev` | Siguiente / anterior pista |
 | `Stop` | Detener reproducción |
 
+### Terminal — Splits (kitty)
+
+| Atajo | Acción |
+|---|---|
+| `Ctrl + Shift + \` | Dividir en vertical (panel derecho) |
+| `Ctrl + Shift + -` | Dividir en horizontal (panel inferior) |
+| `Ctrl + ←↓↑→` | Navegar entre paneles |
+| `Ctrl + Shift + W` | Cerrar panel |
+| `Ctrl + Shift + Z` | Zoom / alternar panel a pantalla completa |
+| `Ctrl + Shift + Enter` | Nuevo panel en el layout actual |
+
+### Terminal — Tabs (kitty)
+
+| Atajo | Acción |
+|---|---|
+| `Ctrl + Shift + T` | Nueva tab (directorio actual) |
+| `Ctrl + Shift + →` | Tab siguiente |
+| `Ctrl + Shift + ←` | Tab anterior |
+| `Ctrl + Shift + Q` | Cerrar tab |
+| `Ctrl + Alt + T` | Renombrar tab |
+| `Ctrl + Shift + .` | Mover tab a la derecha |
+| `Ctrl + Shift + ,` | Mover tab a la izquierda |
+
 ## Paleta
 
 | Rol | Token | Hex |
