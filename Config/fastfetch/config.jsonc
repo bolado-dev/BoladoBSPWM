@@ -8,55 +8,8 @@
     },
     "padding": {
       "top": 1,
-      "right": 3,
       "left": 1
     }
   },
-  "display": {
-    "separator": "  ",
-    "color": {
-      "keys": "38;5;245"
-    }
-  },
-  "modules": [
-    {
-      "type": "title",
-      "format": "{user-name}@{host-name}"
-    },
-    "separator",
-    {
-      "type": "os",
-      "key": "os"
-    },
-    {
-      "type": "kernel",
-      "key": "kernel"
-    },
-    {
-      "type": "wm",
-      "key": "wm",
-      "format": "bspwm"
-    },
-    {
-      "type": "shell",
-      "key": "shell"
-    },
-    {
-      "type": "uptime",
-      "key": "up"
-    },
-    {
-      "type": "packages",
-      "key": "pkgs"
-    },
-    {
-      "type": "cpu",
-      "key": "cpu"
-    },
-    {
-      "type": "memory",
-      "key": "mem"
-    },
-    "break"
-  ]
+  "modules": []
 }
