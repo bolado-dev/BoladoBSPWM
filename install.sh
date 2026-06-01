@@ -125,6 +125,33 @@ install_fonts() {
     fi
 }
 
+install_themes() {
+    step "Temas WhiteSur (GTK · iconos · cursores) + lxappearance"
+    sudo apt install -y lxappearance sassc gtk2-engines-murrine >/dev/null 2>&1 \
+        && info "lxappearance + deps" || warn "lxappearance/deps: revisa apt"
+    local tmp; tmp="$(mktemp -d)"
+    _ws() {  # $1 url  $2 etiqueta  (resto = args del install.sh del tema)
+        local url="$1" tag="$2"; shift 2
+        local d="$tmp/$tag"
+        if git clone --depth=1 "$url" "$d" >/dev/null 2>&1 && [ -x "$d/install.sh" ]; then
+            ( cd "$d" && ./install.sh "$@" >/dev/null 2>&1 ) && { info "WhiteSur $tag"; return 0; }
+        fi
+        warn "WhiteSur $tag falló (instálalo a mano desde $url)"; return 1
+    }
+    _ws https://github.com/vinceliuice/WhiteSur-gtk-theme.git  gtk
+    _ws https://github.com/vinceliuice/WhiteSur-icon-theme.git iconos
+    _ws https://github.com/vinceliuice/WhiteSur-cursors.git    cursores
+    rm -rf "$tmp"
+    # GTK2 (el de GTK3 va bundleado en Config/gtk-3.0/settings.ini)
+    cat > "$HOME/.gtkrc-2.0" <<'G2'
+gtk-theme-name="WhiteSur-Dark"
+gtk-icon-theme-name="WhiteSur-dark"
+gtk-cursor-theme-name="WhiteSur-cursors"
+gtk-font-name="Sans 10"
+G2
+    ok "WhiteSur instalado y aplicado (ajústalo con lxappearance si quieres)"
+}
+
 backup_configs() {
     step "Copia de seguridad de tu config actual"
     local stamp d any=0
@@ -386,14 +413,14 @@ main() {
         STEPS=2; setup_keyboard; adapt_hardware; finish; return
     fi
 
-    STEPS=9
-    [ "$DO_DEPS" -eq 1 ]     || STEPS=$((STEPS-2))   # install_deps + install_fonts
+    STEPS=10
+    [ "$DO_DEPS" -eq 1 ]     || STEPS=$((STEPS-3))   # install_deps + install_fonts + install_themes
     [ "$DO_ROOT" -eq 1 ]     || STEPS=$((STEPS-1))
     [ "$DO_HARDWARE" -eq 1 ] || STEPS=$((STEPS-2))   # setup_keyboard + adapt_hardware
 
     if ! confirm "Instalar BoladoBSPWM en este equipo?"; then echo "Cancelado."; exit 0; fi
 
-    [ "$DO_DEPS" -eq 1 ] && { install_deps; install_fonts; }
+    [ "$DO_DEPS" -eq 1 ] && { install_deps; install_fonts; install_themes; }
     backup_configs
     copy_configs
     setup_zsh
