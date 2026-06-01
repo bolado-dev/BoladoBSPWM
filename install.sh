@@ -219,6 +219,9 @@ setup_zsh() {
     fi
     [ -f "$RUTA"/scripts/kitty_start ] && \
         sudo install -m755 "$RUTA"/scripts/kitty_start /usr/local/bin/kitty_start
+    [ -f "$RUTA"/scripts/settarget ] && \
+        sudo install -m755 "$RUTA"/scripts/settarget /usr/local/bin/settarget && \
+        info "settarget → /usr/local/bin/settarget"
     ok "prompt rounded (acento blanco) listo"
     if [ "$SHELL" != "$(command -v zsh)" ] && confirm "¿Poner zsh como shell por defecto?"; then
         chsh -s "$(command -v zsh)" && ok "shell por defecto → zsh" || warn "no se pudo cambiar el shell"
