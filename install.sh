@@ -99,11 +99,29 @@ install_deps() {
         bspwm sxhkd polybar kitty rofi picom feh \
         flameshot brightnessctl playerctl pamixer i3lock \
         fastfetch imagemagick wmname libnotify-bin x11-utils \
-        pavucontrol network-manager-gnome blueman \
+        pavucontrol network-manager-gnome blueman wireplumber \
         zsh zsh-syntax-highlighting zsh-autosuggestions \
-        fonts-hack fonts-font-awesome \
+        git curl lsd bat fzf xclip scrot openvpn \
+        fonts-hack fonts-font-awesome fonts-source-code-pro fontconfig \
         python3 pciutils x11-xserver-utils \
         && ok "Paquetes instalados" || warn "Algún paquete falló (revisa la salida de apt)"
+    # Fuentes opcionales (pueden no estar en todos los repos): no deben abortar la instalación
+    sudo apt install -y fonts-montserrat >/dev/null 2>&1 \
+        && info "fonts-montserrat" || info "fonts-montserrat no disponible (se omite)"
+}
+
+install_fonts() {
+    step "Instalando fuentes del tema (Nerd Font · Helvetica · feather)"
+    local src="$RUTA/Config/polybar/fonts" fdir="$HOME/.local/share/fonts/BoladoBSPWM"
+    if [ -d "$src" ]; then
+        mkdir -p "$fdir"
+        find "$src" -maxdepth 1 -type f \( -iname '*.ttf' -o -iname '*.otf' \) \
+            -exec cp -f {} "$fdir/" \;
+        fc-cache -f "$fdir" >/dev/null 2>&1
+        ok "Iosevka/Hurmit Nerd Font + Helvetica + feather → ~/.local/share/fonts"
+    else
+        warn "no encuentro las fuentes del repo en $src"
+    fi
 }
 
 backup_configs() {
@@ -135,6 +153,10 @@ setup_zsh() {
     cp "$RUTA"/zsh/.zshrc        "$HOME/.zshrc"
     cp "$RUTA"/zsh/.p10k.zsh     "$HOME/.p10k.zsh"
     cp "$RUTA"/zsh/p10k-mono.zsh "$HOME/.config/p10k-mono.zsh"
+    # plugin "sudo" (Esc-Esc antepone sudo) vendorizado en el repo
+    if [ -f "$RUTA/zsh/plugins/sudo.plugin.zsh" ]; then
+        install -Dm644 "$RUTA"/zsh/plugins/sudo.plugin.zsh "$HOME/.config/zsh/sudo.plugin.zsh"
+    fi
     grep -q 'p10k-mono.zsh' "$HOME/.zshrc" || \
         echo '[[ -f ~/.config/p10k-mono.zsh ]] && source ~/.config/p10k-mono.zsh' >> "$HOME/.zshrc"
     if [ ! -d "$HOME/.powerlevel10k" ]; then
@@ -225,6 +247,26 @@ open(path,"w",encoding="utf-8").write("\n".join(lines))
 PYEOF
 }
 
+# ── Teclado (es,us · Alt+Shift) ────────────────────────────────────
+# Forma robusta: regla persistente a nivel de servidor X, independiente del WM.
+# Reemplaza al frágil `setxkbmap … &` del bspwmrc (que se perdía entre sesiones).
+setup_keyboard() {
+    [ "$DO_HARDWARE" -eq 1 ] || return 0
+    step "Configurando teclado (es,us · alternar con Alt+Shift)"
+    if [ -f "$RUTA/x11/00-keyboard.conf" ]; then
+        sudo install -Dm644 "$RUTA"/x11/00-keyboard.conf /etc/X11/xorg.conf.d/00-keyboard.conf \
+            && ok "layout persistente → /etc/X11/xorg.conf.d/00-keyboard.conf" \
+            || warn "no se pudo escribir la regla X de teclado"
+    else
+        sudo localectl set-x11-keymap "es,us" pc105 "" "grp:alt_shift_toggle" 2>/dev/null \
+            && ok "layout fijado vía localectl" || warn "no se pudo fijar el layout"
+    fi
+    # aplicar ya en la sesión actual, sin reiniciar X
+    [ -n "${DISPLAY:-}" ] && setxkbmap -layout es,us -option grp:alt_shift_toggle 2>/dev/null \
+        && info "aplicado en la sesión actual"
+    return 0
+}
+
 adapt_hardware() {
     [ "$DO_HARDWARE" -eq 1 ] || return 0
     step "Adaptando al hardware"
@@ -312,19 +354,23 @@ main() {
     preflight
 
     if [ "$HARDWARE_ONLY" -eq 1 ]; then
-        STEPS=1; adapt_hardware; finish; return
+        STEPS=2; setup_keyboard; adapt_hardware; finish; return
     fi
 
-    STEPS=7; [ "$DO_DEPS" -eq 1 ] || STEPS=$((STEPS-1)); [ "$DO_ROOT" -eq 1 ] || STEPS=$((STEPS-1)); [ "$DO_HARDWARE" -eq 1 ] || STEPS=$((STEPS-1))
+    STEPS=9
+    [ "$DO_DEPS" -eq 1 ]     || STEPS=$((STEPS-2))   # install_deps + install_fonts
+    [ "$DO_ROOT" -eq 1 ]     || STEPS=$((STEPS-1))
+    [ "$DO_HARDWARE" -eq 1 ] || STEPS=$((STEPS-2))   # setup_keyboard + adapt_hardware
 
     if ! confirm "Instalar BoladoBSPWM en este equipo?"; then echo "Cancelado."; exit 0; fi
 
-    [ "$DO_DEPS" -eq 1 ] && install_deps
+    [ "$DO_DEPS" -eq 1 ] && { install_deps; install_fonts; }
     backup_configs
     copy_configs
     setup_zsh
     setup_root_prompt
     set_permissions
+    setup_keyboard
     adapt_hardware
     finish
 }
