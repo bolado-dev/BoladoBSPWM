@@ -137,18 +137,37 @@ install_fonts() {
 install_themes() {
     step "Temas WhiteSur (GTK · iconos · cursores)"
     local tmp; tmp="$(mktemp -d)"
+
     _ws() {  # $1 url  $2 etiqueta  (resto = args del install.sh del tema)
         local url="$1" tag="$2"; shift 2
         local d="$tmp/$tag"
-        if git clone --depth=1 "$url" "$d" >/dev/null 2>&1 && [ -x "$d/install.sh" ]; then
-            ( cd "$d" && ./install.sh "$@" >/dev/null 2>&1 ) && { info "WhiteSur $tag"; return 0; }
+
+        info "── Clonando WhiteSur $tag…"
+        if ! git clone --depth=1 "$url" "$d"; then
+            warn "WhiteSur $tag: git clone falló (sin red o repo no disponible)"
+            return 1
         fi
-        warn "WhiteSur $tag falló (instálalo a mano desde $url)"; return 1
+
+        if [ ! -x "$d/install.sh" ]; then
+            warn "WhiteSur $tag: install.sh no encontrado o no ejecutable"
+            return 1
+        fi
+
+        info "── Instalando WhiteSur $tag…"
+        if ( cd "$d" && ./install.sh "$@" ); then
+            ok "WhiteSur $tag instalado"
+        else
+            warn "WhiteSur $tag: el instalador terminó con error"
+            return 1
+        fi
     }
+
     _ws https://github.com/vinceliuice/WhiteSur-gtk-theme.git  gtk
     _ws https://github.com/vinceliuice/WhiteSur-icon-theme.git iconos
     _ws https://github.com/vinceliuice/WhiteSur-cursors.git    cursores
+
     rm -rf "$tmp"
+
     # GTK2 (el de GTK3 va bundleado en Config/gtk-3.0/settings.ini)
     cat > "$HOME/.gtkrc-2.0" <<'G2'
 gtk-theme-name="WhiteSur-Dark"
