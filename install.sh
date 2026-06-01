@@ -112,7 +112,7 @@ install_deps() {
         git curl lsd bat fzf xclip scrot openvpn arandr autorandr power-profiles-daemon \
         fonts-font-awesome fontconfig \
         python3 pciutils x11-xserver-utils \
-        lxappearance sassc gtk2-engines-murrine \
+        lxappearance sassc gtk2-engines \
         && ok "Paquetes instalados" || warn "Algún paquete falló (revisa la salida de apt)"
     # Hack/3270 Nerd Font (iconos + dragón Kali), Source Code Pro y Montserrat no
     # están bien en apt: van bundleadas en Config/polybar/fonts y las pone install_fonts.
