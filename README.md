@@ -2,14 +2,14 @@
 
 # BoladoBSPWM
 
-**Un *rice* monocromo con acento ámbar para bspwm, pensado para Kali Linux.**
+**Un *rice* monocromo para bspwm, pensado para Kali Linux.**
 
 Minimalista, con una única barra de polybar tipo *pill* y un instalador que se adapta
 solo al hardware de cada máquina.
 
 <br>
 
-![bspwm](https://img.shields.io/badge/WM-bspwm-ffb300?style=flat-square)
+![bspwm](https://img.shields.io/badge/WM-bspwm-2b2b2b?style=flat-square)
 ![polybar](https://img.shields.io/badge/bar-polybar-2b2b2b?style=flat-square)
 ![kitty](https://img.shields.io/badge/terminal-kitty-2b2b2b?style=flat-square)
 ![rofi](https://img.shields.io/badge/launcher-rofi-2b2b2b?style=flat-square)
@@ -27,8 +27,7 @@ solo al hardware de cada máquina.
 ## Sobre el proyecto
 
 Configuración personal de escritorio para `bspwm`. La estética es **monocroma** —negros y
-grises— rota por un único acento **ámbar (`#ffb300`)**, con una **barra de polybar única tipo
-pill**: full-width y de esquinas redondeadas.
+blancos— con una **barra de polybar única tipo pill**: full-width y de esquinas redondeadas.
 
 Todo está pensado para instalarse tal cual mediante un solo script que, además, **detecta y se
 adapta al hardware** de cada equipo: batería, red, touchpad, monitores y drivers de GPU.
@@ -39,7 +38,7 @@ adapta al hardware** de cada equipo: batería, red, touchpad, monitores y driver
 |---|---|
 | **bspwm + sxhkd** | Gestor de ventanas y atajos: volumen (`wpctl`), brillo (`brightnessctl`), multimedia (`playerctl`), capturas (`flameshot`), bloqueo (`i3lock`). |
 | **polybar** | Una sola barra `[bar/pill]`. Izquierda: power, workspaces y reproductor · Centro: estado IP / HTB · Derecha: volumen, wifi (ESSID y señal), batería y reloj. |
-| **kitty** | Paleta monocroma con ámbar vivo (`#ffb300`). |
+| **kitty** | Paleta monocroma. |
 | **rofi** | Tema `rofi-mono.rasi`, lanzador con `super + d`. |
 | **Powerlevel10k** | Prompt *classic* recoloreado vía `~/.config/p10k-mono.zsh` (no toca tu `.p10k.zsh` base). |
 | **fastfetch** | Banner ASCII al abrir la terminal. |
@@ -129,7 +128,6 @@ configs según la máquina:
 |---|---|---|
 | Fondo | `bg` | `#141414` |
 | Texto | `fg` | `#f0f0f0` |
-| Acento | `amber` | `#ffb300` |
 | Wifi | `green` | `#7cc043` |
 | Error | `red` | `#e05561` |
 
