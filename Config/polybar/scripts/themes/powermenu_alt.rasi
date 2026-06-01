@@ -85,7 +85,7 @@ listview {
 
 mainbox {
     background-color:               @background;
-    children:                       [ inputbar, listview ];
+    children:                       [ listview ];
     spacing:                       	5px;
     padding:                        5px 5px 5px 5px;
 }

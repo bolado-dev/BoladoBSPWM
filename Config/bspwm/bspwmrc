@@ -36,6 +36,13 @@ feh --bg-fill ~/Imágenes/wp-pc.png
 # POLYBAR
 ~/.config/polybar/launch.sh
 
+# Sin batería (escritorio): sin ahorro de energía / no apagar pantalla / CPU a tope
+if ! ls /sys/class/power_supply/ 2>/dev/null | grep -qiE '^BAT'; then
+    xset s off -dpms
+    command -v powerprofilesctl >/dev/null && powerprofilesctl set performance 2>/dev/null
+fi
+
+
 # CUSTOM
 bspc config focus_follows_pointer true
 

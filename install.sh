@@ -101,7 +101,7 @@ install_deps() {
         fastfetch imagemagick wmname libnotify-bin x11-utils \
         pavucontrol network-manager-gnome blueman wireplumber \
         zsh zsh-syntax-highlighting zsh-autosuggestions \
-        git curl lsd bat fzf xclip scrot openvpn arandr autorandr \
+        git curl lsd bat fzf xclip scrot openvpn arandr autorandr power-profiles-daemon \
         fonts-font-awesome fontconfig \
         python3 pciutils x11-xserver-utils \
         && ok "Paquetes instalados" || warn "Algún paquete falló (revisa la salida de apt)"

@@ -3,7 +3,6 @@
 
 rofi_command="rofi -theme ~/.config/polybar/scripts/themes/powermenu_alt.rasi"
 
-uptime=$(uptime -p | sed -e 's/up //g')
 
 # Options
 shutdown=" Shutdown"
