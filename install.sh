@@ -312,30 +312,55 @@ adapt_hardware() {
         info "GPU Intel (driver en kernel/Mesa)"
     fi
 
-    # Monitores: disposición visual con arandr + auto-aplicación con autorandr
+    # Monitores: elegir primario + colocar con arandr (se cierra/guarda solo) + autorandr
     if [ -n "${DISPLAY:-}" ]; then
-        local mons n; mapfile -t mons < <(xrandr --query 2>/dev/null | awk '/ connected/{print $1}')
+        local mons n i; mapfile -t mons < <(xrandr --query 2>/dev/null | awk '/ connected/{print $1}')
         n=${#mons[@]}
         if [ "$n" -gt 1 ]; then
-            if command -v arandr >/dev/null && confirm "Detectados $n monitores (${mons[*]}). ¿Abrir arandr para colocarlos arrastrando?"; then
-                info "Arrastra las pantallas, pulsa «Aplicar» y cierra arandr para continuar…"
-                arandr
+            # 1) Elegir el monitor PRIMARIO (tendrá los desktops I-V) — fácil, por número
+            local primary sel res
+            echo "  Monitores detectados:"
+            for i in "${!mons[@]}"; do
+                res=$(xrandr --query | awk -v m="${mons[i]}" '$1==m{for(j=1;j<=NF;j++) if($j ~ /[0-9]+x[0-9]+\+/){print $j; exit}}')
+                printf "    %d) %-12s %s\n" "$((i+1))" "${mons[i]}" "${res:-?}"
+            done
+            if [ "$ASSUME_YES" -eq 1 ]; then sel=1; else
+                read -rp "  → ¿Cuál es el monitor PRIMARIO? [1]: " sel; fi
+            sel=${sel:-1}; primary="${mons[$((sel-1))]}"; [ -z "$primary" ] && primary="${mons[0]}"
+            xrandr --output "$primary" --primary 2>/dev/null
+            info "primario: $primary → desktops I-V"
+
+            # 2) arandr para colocar arrastrando; al pulsar «Aplicar» se cierra solo y se guarda
+            if [ "$ASSUME_YES" -eq 0 ] && command -v arandr >/dev/null \
+               && confirm "¿Abrir arandr para colocar las pantallas arrastrando?"; then
+                info "Coloca las pantallas y pulsa «Aplicar»: arandr se cerrará solo y se guardará."
+                local before sig apid
+                before="$(xrandr --query | grep ' connected' | sed 's/ (.*//')"
+                arandr >/dev/null 2>&1 & apid=$!
+                while kill -0 "$apid" 2>/dev/null; do
+                    sig="$(xrandr --query | grep ' connected' | sed 's/ (.*//')"
+                    [ "$sig" != "$before" ] && { sleep 1; kill "$apid" 2>/dev/null; break; }
+                    sleep 1
+                done
+                wait "$apid" 2>/dev/null
             fi
-            # Guardar el layout: autorandr lo restaura solo al arrancar o al (des)conectar
+            xrandr --output "$primary" --primary 2>/dev/null   # reasegurar primario tras arandr
+
+            # 3) Guardar layout (autorandr lo auto-aplica al arrancar o al (des)conectar)
             if command -v autorandr >/dev/null; then
                 autorandr --save default --force >/dev/null 2>&1 \
-                    && info "layout guardado (autorandr «default»); se auto-aplica al arrancar/conectar" \
+                    && info "layout guardado (autorandr «default»)" \
                     || warn "no se pudo guardar el layout con autorandr"
             else
                 warn "autorandr no está instalado: el layout no se auto-aplicará"
             fi
-            # Repartir los 10 desktops (romanos) entre los dos primeros monitores
-            local primary secondary
-            primary=$(xrandr --query | awk '/ connected primary/{print $1; exit}'); [ -z "$primary" ] && primary="${mons[0]}"
+
+            # 4) Repartir desktops: primario I-V, el siguiente monitor VI-X
+            local secondary
             secondary=$(printf '%s\n' "${mons[@]}" | grep -vx "$primary" | head -1)
             if [ -n "$secondary" ] && grep -qE '^bspc monitor -d ' "$BSPWMRC"; then
                 sed -i "s|^bspc monitor -d .*|bspc monitor \"$primary\" -d I II III IV V\nbspc monitor \"$secondary\" -d VI VII VIII IX X|" "$BSPWMRC"
-                info "desktops: $primary → I–V · $secondary → VI–X"
+                info "desktops: $primary → I-V · $secondary → VI-X"
             fi
             _polybar_py pillmonitor
         fi
