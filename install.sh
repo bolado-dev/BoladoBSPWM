@@ -242,7 +242,7 @@ if nt:
         set_key("module/network","label-connected",'" %local_ip%"')
         set_key("module/network","label-disconnected",'" sin red"')
     else:
-        set_key("module/network","label-connected",'" %essid% %signal%%"')
+        pass  # wifi: deja el label compacto (solo icono) del current.ini
 if extra=="pillmonitor": set_key("bar/pill","monitor","${env:MONITOR:}")
 open(path,"w",encoding="utf-8").write("\n".join(lines))
 PYEOF
