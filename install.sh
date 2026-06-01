@@ -102,12 +102,11 @@ install_deps() {
         pavucontrol network-manager-gnome blueman wireplumber \
         zsh zsh-syntax-highlighting zsh-autosuggestions \
         git curl lsd bat fzf xclip scrot openvpn \
-        fonts-hack fonts-font-awesome fonts-source-code-pro fontconfig \
+        fonts-hack fonts-font-awesome fontconfig \
         python3 pciutils x11-xserver-utils \
         && ok "Paquetes instalados" || warn "Algún paquete falló (revisa la salida de apt)"
-    # Fuentes opcionales (pueden no estar en todos los repos): no deben abortar la instalación
-    sudo apt install -y fonts-montserrat >/dev/null 2>&1 \
-        && info "fonts-montserrat" || info "fonts-montserrat no disponible (se omite)"
+    # Source Code Pro y Montserrat no están en los repos de Kali: van bundleadas
+    # en el repo (Config/polybar/fonts) y las instala install_fonts.
 }
 
 install_fonts() {
@@ -118,7 +117,8 @@ install_fonts() {
         find "$src" -maxdepth 1 -type f \( -iname '*.ttf' -o -iname '*.otf' \) \
             -exec cp -f {} "$fdir/" \;
         fc-cache -f "$fdir" >/dev/null 2>&1
-        ok "Iosevka/Hurmit Nerd Font + Helvetica + feather → ~/.local/share/fonts"
+        local n; n=$(find "$fdir" -maxdepth 1 -type f \( -iname '*.ttf' -o -iname '*.otf' \) | wc -l)
+        ok "$n fuentes → ~/.local/share/fonts (Nerd Font · Helvetica · Source Code Pro · Montserrat · feather)"
     else
         warn "no encuentro las fuentes del repo en $src"
     fi
