@@ -37,7 +37,7 @@ adapta al hardware** de cada equipo: batería, red, touchpad, monitores y driver
 | Pieza | Detalle |
 |---|---|
 | **bspwm + sxhkd** | Gestor de ventanas y atajos: volumen (`wpctl`), brillo (`brightnessctl`), multimedia (`playerctl`), capturas (`flameshot`), bloqueo (`i3lock`). |
-| **polybar** | Una sola barra `[bar/pill]`. Izquierda: power, workspaces y reproductor · Centro: estado IP / HTB · Derecha: volumen, wifi (ESSID y señal), batería y reloj. |
+| **polybar** | Una sola barra `[bar/pill]`. Izquierda: logo + workspaces · Centro: estado IP / HTB · Derecha: volumen, wifi (ESSID y señal), batería, reloj y power. |
 | **kitty** | Paleta monocroma. |
 | **rofi** | Tema `rofi-mono.rasi`, lanzador con `super + d`. |
 | **Powerlevel10k** | Prompt *classic* recoloreado vía `~/.config/p10k-mono.zsh` (no toca tu `.p10k.zsh` base). |
