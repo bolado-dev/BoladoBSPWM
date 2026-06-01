@@ -1,7 +1,8 @@
 #! /bin/sh
 
 wmname LG3D &
-vmware-user-suid-wrapper &
+# Solo dentro de una VM VMware (en físico no hace nada útil y puede congelar X)
+grep -qi 'vmware' /sys/class/dmi/id/sys_vendor 2>/dev/null && vmware-user-suid-wrapper &
 
 pgrep -x sxhkd > /dev/null || sxhkd &
 
