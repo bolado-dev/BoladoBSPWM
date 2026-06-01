@@ -102,11 +102,12 @@ install_deps() {
         pavucontrol network-manager-gnome blueman wireplumber \
         zsh zsh-syntax-highlighting zsh-autosuggestions \
         git curl lsd bat fzf xclip scrot openvpn arandr autorandr \
-        fonts-hack fonts-font-awesome fontconfig \
+        fonts-font-awesome fontconfig \
         python3 pciutils x11-xserver-utils \
         && ok "Paquetes instalados" || warn "Algún paquete falló (revisa la salida de apt)"
-    # Source Code Pro y Montserrat no están en los repos de Kali: van bundleadas
-    # en el repo (Config/polybar/fonts) y las instala install_fonts.
+    # Hack/3270 Nerd Font (iconos + dragón Kali), Source Code Pro y Montserrat no
+    # están bien en apt: van bundleadas en Config/polybar/fonts y las pone install_fonts.
+    # (fonts-hack de apt NO trae iconos Nerd Font, por eso usamos Hack Nerd Font bundleada).
 }
 
 install_fonts() {
@@ -118,7 +119,7 @@ install_fonts() {
             -exec cp -f {} "$fdir/" \;
         fc-cache -f "$fdir" >/dev/null 2>&1
         local n; n=$(find "$fdir" -maxdepth 1 -type f \( -iname '*.ttf' -o -iname '*.otf' \) | wc -l)
-        ok "$n fuentes → ~/.local/share/fonts (Nerd Font · Helvetica · Source Code Pro · Montserrat · feather)"
+        ok "$n fuentes → ~/.local/share/fonts (Hack/3270/Iosevka/Hurmit Nerd Font · dragón Kali U+F327 · Helvetica · Source Code Pro · Montserrat)"
     else
         warn "no encuentro las fuentes del repo en $src"
     fi
