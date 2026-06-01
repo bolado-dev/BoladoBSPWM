@@ -94,7 +94,9 @@ preflight() {
 # ════════════════════════════════════════════════════════════════════
 install_deps() {
     step "Instalando dependencias"
-    sudo apt update -qq
+    info "Actualizando lista de paquetes..."
+    sudo apt update -q
+    info "Instalando paquetes (puede tardar varios minutos)..."
     sudo apt install -y \
         bspwm sxhkd polybar kitty rofi picom feh \
         flameshot brightnessctl playerctl pamixer i3lock \
@@ -104,6 +106,7 @@ install_deps() {
         git curl lsd bat fzf xclip scrot openvpn arandr autorandr power-profiles-daemon \
         fonts-font-awesome fontconfig \
         python3 pciutils x11-xserver-utils \
+        lxappearance sassc gtk2-engines-murrine \
         && ok "Paquetes instalados" || warn "Algún paquete falló (revisa la salida de apt)"
     # Hack/3270 Nerd Font (iconos + dragón Kali), Source Code Pro y Montserrat no
     # están bien en apt: van bundleadas en Config/polybar/fonts y las pone install_fonts.
@@ -126,9 +129,7 @@ install_fonts() {
 }
 
 install_themes() {
-    step "Temas WhiteSur (GTK · iconos · cursores) + lxappearance"
-    sudo apt install -y lxappearance sassc gtk2-engines-murrine >/dev/null 2>&1 \
-        && info "lxappearance + deps" || warn "lxappearance/deps: revisa apt"
+    step "Temas WhiteSur (GTK · iconos · cursores)"
     local tmp; tmp="$(mktemp -d)"
     _ws() {  # $1 url  $2 etiqueta  (resto = args del install.sh del tema)
         local url="$1" tag="$2"; shift 2
