@@ -152,6 +152,23 @@ function htb() {
 	sudo openvpn /home/alejandro/VPNs/htb.ovpn
 }
 
+# Alterna el layout del teclado entre español e inglés.
+# Sin argumento: cambia al que no esté activo. Con 'es'/'us': lo fuerza.
+# El cambio rápido también funciona con Alt+Shift (configurado en bspwmrc).
+function kbtoggle() {
+	emulate -L zsh
+	local cur target
+	cur="$(setxkbmap -query 2>/dev/null | awk '/^layout:/{print $2}' | cut -d, -f1)"
+	case "$1" in
+		es|us) target="$1" ;;
+		"")    [[ "$cur" == "es" ]] && target="us" || target="es" ;;
+		*)     echo "uso: kbtoggle [es|us]"; return 1 ;;
+	esac
+	setxkbmap -layout "${target},$([[ $target == es ]] && echo us || echo es)" \
+		-option grp:alt_shift_toggle
+	echo "teclado -> $target"
+}
+
 # Pide pegar el "Copy as cURL" de una petición a labs.hackthebox.com
 # (DevTools -> Network -> clic dcho en la petición -> Copy -> Copy as cURL),
 # extrae el "Bearer <token>" y lo guarda en ~/.config/htb/token (chmod 600).

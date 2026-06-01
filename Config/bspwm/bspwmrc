@@ -5,6 +5,9 @@ vmware-user-suid-wrapper &
 
 pgrep -x sxhkd > /dev/null || sxhkd &
 
+# TECLADO: español + inglés, alternar con Alt+Shift
+setxkbmap -layout es,us -option grp:alt_shift_toggle &
+
 bspc monitor -d I II III IV V VI VII VIII IX X
 
 bspc config border_width         2
