@@ -70,14 +70,20 @@ confirm() {
 }
 
 banner() {
-    printf '%s' "$WHITE$B"
-    cat <<'BANNER'
-   ___      _         _      ___ ___ _____      ____  __
-  | _ ) ___| |__ _ __| |___ | _ ) __/ __\ \    / /  \/  |
-  | _ \/ _ \ / _` / _` / _ \| _ \__ \ _| \ \/\/ /| |\/| |
-  |___/\___/_\__,_\__,_\___/|___/___/_|   \_/\_/ |_|  |_|
-BANNER
-    printf '%s' "$R"
+    if [ -t 1 ]; then
+        local c1=$'\e[38;5;244m' c2=$'\e[38;5;246m' c3=$'\e[38;5;248m'
+        local c4=$'\e[38;5;250m' c5=$'\e[38;5;252m' c6=$'\e[38;5;254m'
+        local c7=$'\e[38;5;255m'
+    else
+        local c1='' c2='' c3='' c4='' c5='' c6='' c7=''
+    fi
+    printf "${c1}%s${R}\n" ':::::::::   ::::::::  :::            :::     :::::::::   ::::::::  :::::::::   ::::::::  :::::::::  :::       ::: ::::    ::::  '
+    printf "${c2}%s${R}\n" ':+:    :+: :+:    :+: :+:          :+: :+:   :+:    :+: :+:    :+: :+:    :+: :+:    :+: :+:    :+: :+:       :+: +:+:+: :+:+:+ '
+    printf "${c3}%s${R}\n" '+:+    +:+ +:+    +:+ +:+         +:+   +:+  +:+    +:+ +:+    +:+ +:+    +:+ +:+        +:+    +:+ +:+       +:+ +:+ +:+:+ +:+ '
+    printf "${c4}%s${R}\n" '+#++:++#+  +#+    +:+ +#+        +#++:++#++: +#+    +:+ +#+    +:+ +#++:++#+  +#++:++#++ +#++:++#+  +#+  +:+  +#+ +#+  +:+  +#+ '
+    printf "${c5}%s${R}\n" '+#+    +#+ +#+    +#+ +#+        +#+     +#+ +#+    +#+ +#+    +#+ +#+    +#+        +#+ +#+        +#+ +#+#+ +#+ +#+       +#+ '
+    printf "${c6}%s${R}\n" '#+#    #+# #+#    #+# #+#        #+#     #+# #+#    #+# #+#    #+# #+#    #+# #+#    #+# #+#         #+#+# #+#+#  #+#       #+# '
+    printf "${c7}%s${R}\n" '#########   ########  ########## ###     ### #########   ########  #########   ########  ###          ###   ###   ###       ### '
     printf "  ${GREY}tema bspwm · monocromo + blanco · polybar pill · prompt rounded${R}\n"
     printf "  ${GREY}v%s · %s${R}\n" "$VERSION" "$REPO"
 }
@@ -171,17 +177,17 @@ backup_configs() {
 copy_configs() {
     step "Instalando configuración del tema"
     mkdir -p "$HOME/.config"
-    cp -r "$RUTA"/Config/* "$HOME/.config/"
+    cp -rf "$RUTA"/Config/* "$HOME/.config/"
     ok "bspwm · sxhkd · polybar · kitty · picom · bin"
-    cp "$RUTA"/rofi/rofi-mono.rasi "$HOME/.config/"
+    cp -f "$RUTA"/rofi/rofi-mono.rasi "$HOME/.config/"
     ok "tema rofi (~/.config/rofi-mono.rasi)"
 }
 
 setup_zsh() {
     step "Configurando zsh + Powerlevel10k"
-    cp "$RUTA"/zsh/.zshrc        "$HOME/.zshrc"
-    cp "$RUTA"/zsh/.p10k.zsh     "$HOME/.p10k.zsh"
-    cp "$RUTA"/zsh/p10k-mono.zsh "$HOME/.config/p10k-mono.zsh"
+    cp -f "$RUTA"/zsh/.zshrc        "$HOME/.zshrc"
+    cp -f "$RUTA"/zsh/.p10k.zsh     "$HOME/.p10k.zsh"
+    cp -f "$RUTA"/zsh/p10k-mono.zsh "$HOME/.config/p10k-mono.zsh"
     # plugin "sudo" (Esc-Esc antepone sudo) vendorizado en el repo
     if [ -f "$RUTA/zsh/plugins/sudo.plugin.zsh" ]; then
         install -Dm644 "$RUTA"/zsh/plugins/sudo.plugin.zsh "$HOME/.config/zsh/sudo.plugin.zsh"

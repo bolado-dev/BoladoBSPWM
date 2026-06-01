@@ -6,6 +6,10 @@
 super + Return
 	/usr/bin/kitty
 
+# manual de atajos (ventana flotante)
+alt + F1
+	~/.config/bin/keybindings.sh
+
 # lock screen
 super + shift + l
 	i3lock -c 0d0d0d 2>/dev/null || loginctl lock-session

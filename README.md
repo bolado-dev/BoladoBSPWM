@@ -107,20 +107,108 @@ configs según la máquina:
 > La parte de monitores necesita una sesión X activa; córrela dentro de bspwm. Drivers y
 > monitores son interactivos: preguntan antes de tocar nada.
 
-## Atajos principales
+## Atajos de teclado
+
+> Pulsa `Alt + F1` en el escritorio para abrir el manual flotante completo.
+
+### Aplicaciones
 
 | Atajo | Acción |
 |---|---|
-| `super + Return` | Terminal (kitty) |
-| `super + d` | Lanzador (rofi) |
-| `super + shift + l` | Bloquear (i3lock) |
-| `super + w` · `super + shift + w` | Cerrar · matar ventana |
-| `super + {t,s,f}` | Tiled · floating · fullscreen |
-| `super + {flechas}` | Mover el foco entre ventanas |
-| `super + alt + r` | Recargar bspwm |
-| `XF86Audio*` | Volumen y multimedia |
-| `XF86MonBrightness*` | Brillo |
-| `Print` · `Ctrl+Print` · `Shift+Print` | Captura región · pantalla · portapapeles |
+| `Super + Return` | Terminal (kitty) |
+| `Super + D` | Lanzador (rofi) |
+| `Super + Shift + L` | Bloquear pantalla (i3lock) |
+| `Super + Shift + F` | Firefox |
+| `Super + Shift + B` | BurpSuite |
+| `Alt + F1` | Manual de atajos (flotante) |
+
+### Gestión de ventanas (bspwm)
+
+| Atajo | Acción |
+|---|---|
+| `Super + W` | Cerrar ventana |
+| `Super + Shift + W` | Matar ventana |
+| `Super + M` | Alternar tiled / monocle |
+| `Super + G` | Swap con la ventana más grande |
+| `Super + Y` | Mover nodo marcado al preseleccionado |
+| `Super + Alt + R` | Reiniciar bspwm |
+| `Super + Alt + Q` | Salir de bspwm |
+| `Super + Escape` | Recargar sxhkd |
+
+### Estado de ventanas
+
+| Atajo | Acción |
+|---|---|
+| `Super + T` | Tiled |
+| `Super + Shift + T` | Pseudo-tiled |
+| `Super + S` | Flotante |
+| `Super + F` | Pantalla completa |
+
+### Flags de nodo
+
+| Atajo | Acción |
+|---|---|
+| `Super + Ctrl + M` | Marked |
+| `Super + Ctrl + X` | Locked |
+| `Super + Ctrl + Y` | Sticky |
+| `Super + Ctrl + Z` | Private |
+
+### Foco y swap
+
+| Atajo | Acción |
+|---|---|
+| `Super + ←↓↑→` | Mover foco entre ventanas |
+| `Super + Shift + ←↓↑→` | Intercambiar ventana en esa dirección |
+| `Super + C` | Siguiente ventana del escritorio |
+| `Super + Shift + C` | Ventana anterior del escritorio |
+| ``Super + ` `` | Último nodo activo |
+| `Super + Tab` | Último escritorio activo |
+| `Super + O / I` | Historial de foco (anterior / siguiente) |
+
+### Escritorios
+
+| Atajo | Acción |
+|---|---|
+| `Super + 1–9, 0` | Ir al escritorio I–X |
+| `Super + Shift + 1–9, 0` | Mover ventana al escritorio I–X |
+| `Super + [` | Escritorio anterior |
+| `Super + ]` | Escritorio siguiente |
+
+### Preselección de splits
+
+| Atajo | Acción |
+|---|---|
+| `Super + Ctrl + Alt + ←↓↑→` | Preseleccionar dirección |
+| `Super + Ctrl + 1–9` | Preseleccionar ratio (0.1–0.9) |
+| `Super + Ctrl + Space` | Cancelar preselección del nodo |
+| `Super + Ctrl + Alt + Space` | Cancelar preselección del escritorio |
+
+### Redimensionar y mover
+
+| Atajo | Acción |
+|---|---|
+| `Super + Alt + ←↓↑→` | Redimensionar ventana |
+| `Super + Ctrl + ←↓↑→` | Mover ventana flotante |
+
+### Capturas de pantalla
+
+| Atajo | Acción |
+|---|---|
+| `Print` | Captura región interactiva → `~/ScreenShots` |
+| `Ctrl + Print` | Pantalla completa → `~/ScreenShots` |
+| `Shift + Print` | Pantalla completa → portapapeles |
+
+### Multimedia y sistema
+
+| Atajo | Acción |
+|---|---|
+| `Vol+ / Vol-` | Volumen +5% / -5% (wpctl) |
+| `Mute` | Silenciar / activar audio |
+| `MicMute` | Silenciar / activar micrófono |
+| `Brillo+ / Brillo-` | Brillo +5% / -5% (brightnessctl) |
+| `Play/Pause` | Reproducir / pausar (playerctl) |
+| `Next / Prev` | Siguiente / anterior pista |
+| `Stop` | Detener reproducción |
 
 ## Paleta
 
