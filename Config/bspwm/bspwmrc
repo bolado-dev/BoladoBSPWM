@@ -49,8 +49,13 @@ fi
 # CUSTOM
 bspc config focus_follows_pointer true
 
-# PICOM
-picom &
+# PICOM: vsync solo en GPUs no-Intel (en Intel añade input lag; en NVIDIA/AMD
+# evita el freeze donde picom se traba y solo el movimiento del ratón lo destrava)
+if lspci 2>/dev/null | grep -qi 'vga.*intel\|intel.*vga'; then
+    picom &
+else
+    picom --vsync &
+fi
 bspc config border_width 0
 
 xsetroot -cursor_name left_ptr &
