@@ -16,7 +16,7 @@ REPO="https://github.com/bolado-dev/BoladoBSPWM"
 RUTA="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Opciones ───────────────────────────────────────────────────────
-DO_DEPS=1; DO_ROOT=1; DO_HARDWARE=1; ASSUME_YES=0; HARDWARE_ONLY=0
+DO_DEPS=1; DO_ROOT=1; DO_HARDWARE=1; ASSUME_YES=0; HARDWARE_ONLY=0; REFRESH_ONLY=0
 
 usage() {
     cat <<EOF
@@ -29,6 +29,7 @@ Uso: ./install.sh [opciones]
       --no-root       No configurar el prompt de root
       --no-hardware   No adaptar al hardware (batería/red/monitores/drivers/touchpad)
       --hardware-only Solo re-adaptar al hardware (no copia configs ni instala)
+      --refresh       Actualizar configs y recargar servicios sin reinstalar
   -h, --help          Muestra esta ayuda
 
 Sin opciones: instalación completa interactiva.
@@ -43,6 +44,7 @@ while [ $# -gt 0 ]; do
         --no-root)       DO_ROOT=0 ;;
         --no-hardware)   DO_HARDWARE=0 ;;
         --hardware-only) HARDWARE_ONLY=1 ;;
+        --refresh)       REFRESH_ONLY=1 ;;
         -h|--help)       usage ;;
         *) echo "Opción desconocida: $1 (usa --help)"; exit 1 ;;
     esac
@@ -431,6 +433,27 @@ adapt_hardware() {
     ok "hardware adaptado"
 }
 
+reload_services() {
+    step "Recargando servicios"
+    if [ -z "${DISPLAY:-}" ]; then
+        warn "Sin DISPLAY: servicios no recargados (ejecuta dentro de X)"; return
+    fi
+
+    pkill -USR1 sxhkd 2>/dev/null   && info "sxhkd recargado (USR1)"   || info "sxhkd no estaba corriendo"
+    pkill -USR1 kitty 2>/dev/null   && info "kitty recargado (USR1)"   || true
+
+    if [ -x "$HOME/.config/polybar/launch.sh" ]; then
+        "$HOME/.config/polybar/launch.sh" &
+        info "polybar relanzado"
+    fi
+
+    pkill picom 2>/dev/null; sleep 0.3
+    picom >/dev/null 2>&1 &
+    info "picom reiniciado"
+
+    ok "servicios actualizados"
+}
+
 finish() {
     printf "\n${B}${GREEN}✓ BoladoBSPWM instalado${R}\n"
     printf "${GREY}  • Cierra sesión y entra en bspwm (o recarga: super+alt+r)\n"
@@ -443,6 +466,10 @@ finish() {
 main() {
     banner
     preflight
+
+    if [ "$REFRESH_ONLY" -eq 1 ]; then
+        STEPS=3; copy_configs; set_permissions; reload_services; return
+    fi
 
     if [ "$HARDWARE_ONLY" -eq 1 ]; then
         STEPS=2; setup_keyboard; adapt_hardware; finish; return
