@@ -16,7 +16,7 @@ REPO="https://github.com/bolado-dev/BoladoBSPWM"
 RUTA="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Opciones ───────────────────────────────────────────────────────
-DO_DEPS=1; DO_ROOT=1; DO_HARDWARE=1; ASSUME_YES=0; HARDWARE_ONLY=0; REFRESH_ONLY=0
+DO_DEPS=1; DO_ROOT=1; DO_HARDWARE=1; ASSUME_YES=0; HARDWARE_ONLY=0; REFRESH_ONLY=0; NVIDIA_ONLY=0
 
 usage() {
     cat <<EOF
@@ -30,6 +30,7 @@ Uso: ./install.sh [opciones]
       --no-hardware   No adaptar al hardware (batería/red/monitores/drivers/touchpad)
       --hardware-only Solo re-adaptar al hardware (no copia configs ni instala)
       --refresh       Actualizar configs y recargar servicios sin reinstalar
+      --nvidia        Instalar drivers NVIDIA de forma segura (headers + dkms + picom)
   -h, --help          Muestra esta ayuda
 
 Sin opciones: instalación completa interactiva.
@@ -45,6 +46,7 @@ while [ $# -gt 0 ]; do
         --no-hardware)   DO_HARDWARE=0 ;;
         --hardware-only) HARDWARE_ONLY=1 ;;
         --refresh)       REFRESH_ONLY=1 ;;
+        --nvidia)        NVIDIA_ONLY=1 ;;
         -h|--help)       usage ;;
         *) echo "Opción desconocida: $1 (usa --help)"; exit 1 ;;
     esac
@@ -369,8 +371,7 @@ adapt_hardware() {
     local gpu; gpu=$(lspci 2>/dev/null | grep -iE 'vga compatible|3d controller')
     if echo "$gpu" | grep -qi nvidia; then
         warn "GPU NVIDIA detectada"
-        confirm "¿Instalar driver NVIDIA + firmware?" && sudo apt install -y nvidia-driver firmware-misc-nonfree
-        if [ -f "$PICOM" ]; then grep -q '^backend' "$PICOM" && sudo sed -i 's/^backend.*/backend = "glx";/' "$PICOM" || echo 'backend = "glx";' >> "$PICOM"; fi
+        confirm "¿Instalar driver NVIDIA ahora (proceso completo)?" && install_nvidia
     elif echo "$gpu" | grep -qiE 'amd|radeon'; then
         confirm "GPU AMD: ¿instalar firmware + Mesa/Vulkan?" && sudo apt install -y firmware-amd-graphics mesa-vulkan-drivers
     elif echo "$gpu" | grep -qi intel; then
@@ -464,6 +465,61 @@ reload_services() {
     ok "servicios actualizados"
 }
 
+install_nvidia() {
+    step "Instalando drivers NVIDIA (proceso seguro)"
+
+    # 1. Asegurar non-free + non-free-firmware en sources.list
+    if ! grep -q 'non-free' /etc/apt/sources.list 2>/dev/null; then
+        sudo sed -i 's/^\(deb.*kali-rolling.*main\).*/\1 contrib non-free non-free-firmware/' /etc/apt/sources.list
+        ok "sources.list: contrib non-free non-free-firmware habilitado"
+    else
+        info "sources.list: non-free ya estaba habilitado"
+    fi
+
+    # 2. Full-upgrade primero (evita conflictos de paquetes parciales)
+    info "Actualizando sistema (full-upgrade)..."
+    sudo apt update -q && sudo apt full-upgrade -y \
+        && ok "sistema actualizado" || die "full-upgrade falló — revisa el estado de apt"
+
+    # 3. Kernel headers ANTES del driver (DKMS los necesita para compilar el módulo)
+    info "Instalando linux-headers..."
+    sudo apt install -y linux-headers-amd64 linux-headers-$(uname -r) \
+        && ok "headers instalados ($(uname -r))" \
+        || warn "no se pudieron instalar los headers del kernel actual"
+
+    # 4. Driver NVIDIA + firmware (el paquete blacklistea nouveau automáticamente
+    #    via /etc/modprobe.d/nvidia-blacklists-nouveau.conf)
+    info "Instalando nvidia-driver + firmware..."
+    sudo apt install -y nvidia-driver firmware-misc-nonfree \
+        && ok "nvidia-driver instalado" || die "instalación del driver falló"
+
+    # 5. Actualizar initramfs para que el blacklist de nouveau se aplique en el boot
+    info "Reconstruyendo initramfs..."
+    sudo update-initramfs -u && ok "initramfs actualizado"
+
+    # 6. Ajustar picom para NVIDIA: glx backend + vsync + xrender-sync-fence
+    #    (sin estos, picom se congela con el driver propietario NVIDIA)
+    if [ -f "$PICOM" ]; then
+        sudo sed -i 's/^backend.*/backend = "glx";/'         "$PICOM"
+        sudo sed -i 's/^vsync.*/vsync = true;/'              "$PICOM"
+        sudo sed -i 's/^# xrender-sync-fence.*/xrender-sync-fence = true;/' "$PICOM"
+        grep -q '^xrender-sync-fence' "$PICOM" || echo 'xrender-sync-fence = true;' | sudo tee -a "$PICOM" >/dev/null
+        ok "picom: glx backend + vsync + xrender-sync-fence (requerido para NVIDIA)"
+    fi
+
+    # 7. Revertir el lanzamiento condicional de picom en bspwmrc:
+    #    con driver propietario NVIDIA ya no hace falta el --vsync por línea de comandos
+    if [ -f "$BSPWMRC" ]; then
+        sudo sed -i \
+            '/# PICOM: vsync solo/,/^fi$/c\# PICOM\npicom \&' \
+            "$BSPWMRC" 2>/dev/null || true
+    fi
+
+    printf "\n  ${YELLOW}!${R} ${B}REINICIA el sistema para que el driver NVIDIA cargue.${R}\n"
+    printf "  ${GREY}· Tras el reinicio verifica con: nvidia-smi${R}\n"
+    printf "  ${GREY}· Si aparece pantalla negra: Ctrl+Alt+F3 → sudo dkms autoinstall → reboot${R}\n\n"
+}
+
 finish() {
     printf "\n${B}${GREEN}✓ BoladoBSPWM instalado${R}\n"
     printf "${GREY}  • Cierra sesión y entra en bspwm (o recarga: super+alt+r)\n"
@@ -476,6 +532,10 @@ finish() {
 main() {
     banner
     preflight
+
+    if [ "$NVIDIA_ONLY" -eq 1 ]; then
+        STEPS=1; install_nvidia; return
+    fi
 
     if [ "$REFRESH_ONLY" -eq 1 ]; then
         DO_HARDWARE=1
