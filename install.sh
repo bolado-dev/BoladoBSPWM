@@ -468,7 +468,8 @@ main() {
     preflight
 
     if [ "$REFRESH_ONLY" -eq 1 ]; then
-        STEPS=3; copy_configs; set_permissions; reload_services; return
+        DO_HARDWARE=1
+        STEPS=4; copy_configs; set_permissions; setup_keyboard; reload_services; return
     fi
 
     if [ "$HARDWARE_ONLY" -eq 1 ]; then

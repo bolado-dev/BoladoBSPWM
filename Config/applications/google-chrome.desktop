@@ -5,7 +5,7 @@ GenericName=Web Browser
 GenericName[es]=Navegador web
 Comment=Access the Internet
 Comment[es]=Accede a Internet.
-Exec=/usr/bin/google-chrome-stable --use-gl=egl --disable-features=VaapiVideoDecoder %U
+Exec=/usr/bin/google-chrome-stable --disable-gpu-compositing %U
 StartupNotify=true
 Terminal=false
 Icon=google-chrome
@@ -17,9 +17,9 @@ Actions=new-window;new-private-window;
 [Desktop Action new-window]
 Name=New Window
 Name[es]=Nueva ventana
-Exec=/usr/bin/google-chrome-stable --use-gl=egl --disable-features=VaapiVideoDecoder
+Exec=/usr/bin/google-chrome-stable --disable-gpu-compositing
 
 [Desktop Action new-private-window]
 Name=New Incognito Window
 Name[es]=Nueva ventana de incógnito
-Exec=/usr/bin/google-chrome-stable --use-gl=egl --disable-features=VaapiVideoDecoder --incognito
+Exec=/usr/bin/google-chrome-stable --disable-gpu-compositing --incognito
