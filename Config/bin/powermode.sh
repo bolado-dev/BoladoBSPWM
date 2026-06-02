@@ -29,7 +29,7 @@ done
 
 sel="$(echo -e "$opts" | rofi -dmenu -i -p "" \
         -theme ~/.config/rofi-mono.rasi \
-        -theme-str 'configuration { show-icons: false; } window { width: 22%; } listview { lines: 3; } mainbox { children: [ listview ]; }')"
+        -theme-str 'configuration { show-icons: false; location: 3; } window { width: 22%; x-offset: -210px; y-offset: 70px; } listview { lines: 3; } mainbox { children: [ listview ]; }')"
 
 case "$sel" in
     *Rendimiento*) powerprofilesctl set performance ;;
