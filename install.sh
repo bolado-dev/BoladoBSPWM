@@ -200,6 +200,12 @@ copy_configs() {
     ok "bspwm · sxhkd · polybar · kitty · picom · bin"
     cp -f "$RUTA"/rofi/rofi-mono.rasi "$HOME/.config/"
     ok "tema rofi (~/.config/rofi-mono.rasi)"
+    # Override de Chrome: usa EGL en vez de GLX para evitar freezes con picom
+    if [ -f "$RUTA/Config/applications/google-chrome.desktop" ]; then
+        mkdir -p "$HOME/.local/share/applications"
+        cp -f "$RUTA/Config/applications/google-chrome.desktop" "$HOME/.local/share/applications/"
+        ok "google-chrome.desktop → ~/.local/share/applications (--use-gl=egl)"
+    fi
 }
 
 setup_zsh() {
