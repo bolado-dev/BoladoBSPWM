@@ -433,6 +433,16 @@ adapt_hardware() {
     ok "hardware adaptado"
 }
 
+install_scripts() {
+    step "Actualizando scripts del sistema"
+    [ -f "$RUTA/scripts/kitty_start" ] && \
+        sudo install -m755 "$RUTA/scripts/kitty_start" /usr/local/bin/kitty_start && \
+        ok "kitty_start → /usr/local/bin/" || warn "no se pudo instalar kitty_start"
+    [ -f "$RUTA/scripts/settarget" ] && \
+        sudo install -m755 "$RUTA/scripts/settarget" /usr/local/bin/settarget && \
+        ok "settarget → /usr/local/bin/" || warn "no se pudo instalar settarget"
+}
+
 reload_services() {
     step "Recargando servicios"
     if [ -z "${DISPLAY:-}" ]; then
@@ -469,7 +479,7 @@ main() {
 
     if [ "$REFRESH_ONLY" -eq 1 ]; then
         DO_HARDWARE=1
-        STEPS=4; copy_configs; set_permissions; setup_keyboard; reload_services; return
+        STEPS=5; copy_configs; set_permissions; setup_keyboard; install_scripts; reload_services; return
     fi
 
     if [ "$HARDWARE_ONLY" -eq 1 ]; then
