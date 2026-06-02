@@ -28,8 +28,8 @@ for p in "${profs[@]}"; do
 done
 
 sel="$(echo -e "$opts" | rofi -dmenu -i -p "" \
-        -theme ~/.config/polybar/scripts/themes/powermenu_alt.rasi \
-        -theme-str 'listview { lines: 3; } window { x-offset: -210px; }')"
+        -theme ~/.config/rofi-mono.rasi \
+        -theme-str 'configuration { show-icons: false; } window { width: 22%; } listview { lines: 3; } mainbox { children: [ listview ]; }')"
 
 case "$sel" in
     *Rendimiento*) powerprofilesctl set performance ;;

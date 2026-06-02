@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-rofi_command="rofi -theme $HOME/.config/polybar/scripts/themes/powermenu.rasi"
+rofi_command="rofi -theme $HOME/.config/rofi-mono.rasi -theme-str 'configuration { show-icons: false; } window { width: 24%; } listview { lines: 5; } mainbox { children: [ listview ]; }'"
 
 uptime=$(uptime -p | sed -e 's/up //g')
 
