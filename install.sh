@@ -16,7 +16,7 @@ REPO="https://github.com/bolado-dev/BoladoBSPWM"
 RUTA="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Opciones ───────────────────────────────────────────────────────
-DO_DEPS=1; DO_ROOT=1; DO_HARDWARE=1; ASSUME_YES=0; HARDWARE_ONLY=0; REFRESH_ONLY=0; NVIDIA_ONLY=0
+DO_DEPS=1; DO_ROOT=1; DO_HARDWARE=1; ASSUME_YES=0; HARDWARE_ONLY=0; REFRESH_ONLY=0; NVIDIA_ONLY=0; DM_ONLY=0; KEYBOARD_ONLY=0
 
 usage() {
     cat <<EOF
@@ -31,6 +31,8 @@ Uso: ./install.sh [opciones]
       --hardware-only Solo re-adaptar al hardware (no copia configs ni instala)
       --refresh       Actualizar configs y recargar servicios sin reinstalar
       --nvidia        Instalar drivers NVIDIA de forma segura (headers + dkms + picom)
+      --dm            Configurar display manager (GDM vs lightdm) sin reinstalar
+      --keyboard      Fijar layout es,us permanente en todas las capas del sistema
   -h, --help          Muestra esta ayuda
 
 Sin opciones: instalación completa interactiva.
@@ -47,6 +49,8 @@ while [ $# -gt 0 ]; do
         --hardware-only) HARDWARE_ONLY=1 ;;
         --refresh)       REFRESH_ONLY=1 ;;
         --nvidia)        NVIDIA_ONLY=1 ;;
+        --dm)            DM_ONLY=1 ;;
+        --keyboard)      KEYBOARD_ONLY=1 ;;
         -h|--help)       usage ;;
         *) echo "Opción desconocida: $1 (usa --help)"; exit 1 ;;
     esac
@@ -315,22 +319,49 @@ PYEOF
 }
 
 # ── Teclado (es,us · Alt+Shift) ────────────────────────────────────
-# Forma robusta: regla persistente a nivel de servidor X, independiente del WM.
-# Reemplaza al frágil `setxkbmap … &` del bspwmrc (que se perdía entre sesiones).
+# Fija el layout en las 4 capas del sistema para que sea permanente:
+#   1. /etc/default/keyboard  — TTY + udev + base del sistema
+#   2. localectl               — sincroniza el subsistema systemd
+#   3. xorg.conf.d             — X11 autoritativo (reinstalado DESPUÉS de localectl
+#                                por si localectl lo sobreescribe con el valor incorrecto)
+#   4. setxkbmap               — aplica en la sesión X actual sin reiniciar
 setup_keyboard() {
     [ "$DO_HARDWARE" -eq 1 ] || return 0
-    step "Configurando teclado (es,us · alternar con Alt+Shift)"
-    if [ -f "$RUTA/x11/00-keyboard.conf" ]; then
-        sudo install -Dm644 "$RUTA"/x11/00-keyboard.conf /etc/X11/xorg.conf.d/00-keyboard.conf \
-            && ok "layout persistente → /etc/X11/xorg.conf.d/00-keyboard.conf" \
-            || warn "no se pudo escribir la regla X de teclado"
-    else
-        sudo localectl set-x11-keymap "es,us" pc105 "" "grp:alt_shift_toggle" 2>/dev/null \
-            && ok "layout fijado vía localectl" || warn "no se pudo fijar el layout"
-    fi
-    # aplicar ya en la sesión actual, sin reiniciar X
-    [ -n "${DISPLAY:-}" ] && setxkbmap -layout es,us -option grp:alt_shift_toggle 2>/dev/null \
-        && info "aplicado en la sesión actual"
+    step "Configurando teclado (es,us · Alt+Shift — 4 capas)"
+
+    # 1. /etc/default/keyboard — base del sistema (TTY, udev, localectl lo lee de aquí)
+    sudo tee /etc/default/keyboard > /dev/null << 'EOF'
+# BoladoBSPWM
+XKBMODEL="pc105"
+XKBLAYOUT="es,us"
+XKBVARIANT=","
+XKBOPTIONS="grp:alt_shift_toggle"
+BACKSPACE="guess"
+EOF
+    ok "/etc/default/keyboard → es,us · grp:alt_shift_toggle"
+
+    # 2. localectl — sincroniza systemd/udev con el keyboard subsystem
+    #    NOTA: en Debian, localectl puede sobreescribir /etc/X11/xorg.conf.d/00-keyboard.conf,
+    #    por eso reinstalamos nuestra copia en el paso 3.
+    sudo localectl set-x11-keymap "es,us" pc105 "," "grp:alt_shift_toggle" 2>/dev/null \
+        && info "localectl sincronizado → es,us" \
+        || info "localectl no disponible (se usará solo xorg.conf.d)"
+
+    # 3. /etc/X11/xorg.conf.d/00-keyboard.conf — regla X11 autoritativa
+    #    Instalado DESPUÉS de localectl para asegurar que nuestros valores prevalecen.
+    sudo install -Dm644 "$RUTA/x11/00-keyboard.conf" /etc/X11/xorg.conf.d/00-keyboard.conf \
+        && ok "00-keyboard.conf → /etc/X11/xorg.conf.d/ (prevalece sobre localectl)" \
+        || warn "no se pudo instalar 00-keyboard.conf"
+
+    # 4. Consola (TTY) sin reiniciar
+    sudo setupcon --force 2>/dev/null \
+        && info "TTY: layout aplicado en consola" \
+        || info "setupcon no disponible, se aplicará al reiniciar"
+
+    # 5. Sesión X actual (si hay DISPLAY)
+    [ -n "${DISPLAY:-}" ] && setxkbmap -layout es,us -model pc105 -option grp:alt_shift_toggle 2>/dev/null \
+        && info "aplicado en la sesión X actual"
+
     return 0
 }
 
@@ -515,9 +546,123 @@ install_nvidia() {
             "$BSPWMRC" 2>/dev/null || true
     fi
 
-    printf "\n  ${YELLOW}!${R} ${B}REINICIA el sistema para que el driver NVIDIA cargue.${R}\n"
-    printf "  ${GREY}· Tras el reinicio verifica con: nvidia-smi${R}\n"
-    printf "  ${GREY}· Si aparece pantalla negra: Ctrl+Alt+F3 → sudo dkms autoinstall → reboot${R}\n\n"
+    # 8. Activar nvidia-drm.modeset=1 en GRUB (necesario para Wayland + DRM KMS)
+    if ! grep -q 'nvidia-drm.modeset=1' /etc/default/grub 2>/dev/null; then
+        sudo sed -i \
+            's/^\(GRUB_CMDLINE_LINUX_DEFAULT="[^"]*\)"/\1 nvidia-drm.modeset=1"/' \
+            /etc/default/grub \
+            && ok "nvidia-drm.modeset=1 → GRUB_CMDLINE_LINUX_DEFAULT" \
+            || warn "no se pudo modificar /etc/default/grub"
+        sudo update-grub && ok "grub.cfg regenerado" || warn "update-grub falló"
+    else
+        info "nvidia-drm.modeset=1 ya estaba en GRUB"
+    fi
+
+    printf "\n  ${YELLOW}!${R} ${B}Driver NVIDIA instalado — configura el display manager a continuación.${R}\n\n"
+
+    configure_display_manager
+}
+
+_setup_lightdm() {
+    # ── 1. lightdm ────────────────────────────────────────────────────
+    info "Instalando lightdm..."
+    sudo apt install -y lightdm \
+        && ok "lightdm instalado" || die "no se pudo instalar lightdm"
+
+    # ── 2. web-greeter (reemplaza lightdm-webkit2-greeter en Debian/Kali) ──
+    #    Soporta temas webkit2 como Glorious. Si no está en apt, descarga el deb.
+    if ! dpkg -l web-greeter 2>/dev/null | grep -q '^ii'; then
+        if apt-cache show web-greeter >/dev/null 2>&1; then
+            sudo apt install -y web-greeter \
+                && ok "web-greeter instalado (apt)" || die "web-greeter: falló instalación"
+        else
+            local WG_VER="4.0.0"
+            local WG_URL="https://github.com/JezerM/web-greeter/releases/download/${WG_VER}/web-greeter-${WG_VER}-debian.deb"
+            local WG_DEB="/tmp/web-greeter.deb"
+            info "web-greeter no está en apt — descargando deb (~143 MB)..."
+            wget -q --show-progress -O "$WG_DEB" "$WG_URL" \
+                && ok "web-greeter descargado" || die "no se pudo descargar web-greeter"
+            sudo dpkg -i "$WG_DEB" && ok "web-greeter instalado (deb)" \
+                || { sudo apt install -f -y && ok "web-greeter instalado (dependencias corregidas)"; }
+            rm -f "$WG_DEB"
+        fi
+    else
+        ok "web-greeter ya estaba instalado"
+    fi
+
+    # ── 3. Tema Glorious ──────────────────────────────────────────────
+    local THEME_DIR="/usr/share/lightdm-webkit/themes/glorious"
+    if [ -d "$THEME_DIR/.git" ]; then
+        info "Glorious: actualizando..."
+        sudo git -C "$THEME_DIR" pull --ff-only -q \
+            && ok "Glorious actualizado" || warn "Glorious: git pull falló (se usa la copia existente)"
+    else
+        info "Clonando lightdm-webkit2-theme-glorious..."
+        sudo git clone --depth 1 \
+            https://github.com/eromatiya/lightdm-webkit2-theme-glorious.git \
+            "$THEME_DIR" \
+            && ok "Glorious clonado → $THEME_DIR" \
+            || die "no se pudo clonar el tema Glorious"
+    fi
+
+    # ── 4. Wallpaper como fondo de login ──────────────────────────────
+    local WP_SRC="$RUTA/Wallpaper/wp-pc.png"
+    local WP_DEST="/usr/share/backgrounds/bolado-bspwm.png"
+    if [ -f "$WP_SRC" ]; then
+        sudo install -Dm644 "$WP_SRC" "$WP_DEST" \
+            && ok "wallpaper → $WP_DEST (visible en selector de Glorious)" \
+            || warn "no se pudo copiar el wallpaper"
+    else
+        warn "wallpaper no encontrado en $WP_SRC"
+    fi
+
+    # ── 5. Cambiar display manager ────────────────────────────────────
+    local dm_actual
+    dm_actual=$(systemctl show display-manager --property=Id --value 2>/dev/null | sed 's/\.service//')
+    if [ -n "$dm_actual" ] && [ "$dm_actual" != "lightdm" ]; then
+        sudo systemctl disable "$dm_actual" 2>/dev/null || true
+        info "$dm_actual deshabilitado"
+    fi
+    sudo systemctl enable lightdm \
+        && ok "lightdm habilitado como display manager" || warn "no se pudo habilitar lightdm"
+
+    # ── 6. Configurar lightdm + web-greeter ───────────────────────────
+    sudo install -Dm644 "$RUTA/lightdm/lightdm.conf"    /etc/lightdm/lightdm.conf
+    sudo install -Dm644 "$RUTA/lightdm/web-greeter.conf" /etc/lightdm/web-greeter.conf
+    ok "lightdm.conf → greeter: web-greeter · sesión: bspwm"
+    ok "web-greeter.conf → tema: Glorious · wallpaper: /usr/share/backgrounds/"
+}
+
+configure_display_manager() {
+    step "Configurando display manager"
+
+    local dm_actual
+    dm_actual=$(systemctl show display-manager --property=Id --value 2>/dev/null | sed 's/\.service//')
+    dm_actual=${dm_actual:-"desconocido"}
+
+    printf "\n  DM activo: ${B}${WHITE}%s${R}\n\n" "$dm_actual"
+    printf "  ${B}${WHITE}1) GDM${R} — GNOME Display Manager\n"
+    printf "     ${GREEN}+${R} Greeter GNOME Shell (Wayland), aspecto moderno\n"
+    printf "     ${RED}–${R} Requiere nvidia-drm.modeset=1 o pantalla negra con NVIDIA\n"
+    printf "     ${RED}–${R} Sin fallback X11 nativo en Kali · ~150 MB de deps GNOME\n"
+    printf "\n"
+    printf "  ${B}${WHITE}2) lightdm${R} ${GREEN}[recomendado para BSPWM]${R}\n"
+    printf "     ${GREEN}+${R} Sin dependencias GNOME · greeter GTK minimal monocromo\n"
+    printf "     ${GREEN}+${R} Siempre cae a X11 si Wayland falla · ~10 MB\n"
+    printf "     ${GREEN}+${R} Tema oscuro incluido (coherente con BoladoBSPWM)\n\n"
+
+    local choice
+    if [ "$ASSUME_YES" -eq 1 ]; then
+        choice=2
+    else
+        printf "  ${YELLOW}?${R} ¿Qué display manager usar? ${DIM}[1=gdm / 2=lightdm, default=2]${R} "
+        read -r choice
+    fi
+
+    case "${choice:-2}" in
+        1|gdm*) info "Manteniendo GDM — nvidia-drm.modeset=1 ya configurado, reinicia para verificar" ;;
+        *)      _setup_lightdm ;;
+    esac
 }
 
 finish() {
@@ -534,7 +679,15 @@ main() {
     preflight
 
     if [ "$NVIDIA_ONLY" -eq 1 ]; then
-        STEPS=1; install_nvidia; return
+        STEPS=2; install_nvidia; return
+    fi
+
+    if [ "$DM_ONLY" -eq 1 ]; then
+        STEPS=1; configure_display_manager; return
+    fi
+
+    if [ "$KEYBOARD_ONLY" -eq 1 ]; then
+        DO_HARDWARE=1; STEPS=1; setup_keyboard; return
     fi
 
     if [ "$REFRESH_ONLY" -eq 1 ]; then
