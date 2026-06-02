@@ -6,8 +6,9 @@ grep -qi 'vmware' /sys/class/dmi/id/sys_vendor 2>/dev/null && vmware-user-suid-w
 
 pgrep -x sxhkd > /dev/null || sxhkd &
 
-# TECLADO: español + inglés, alternar con Alt+Shift
-setxkbmap -layout es,us -option grp:alt_shift_toggle &
+# TECLADO: es+us, Alt+Shift para alternar. Síncrono para que no lo sobreescriba el DM.
+# En instalaciones sin /etc/X11/xorg.conf.d/00-keyboard.conf esto es el único mecanismo.
+setxkbmap -layout es,us -model pc105 -option grp:alt_shift_toggle
 
 # Pantallas: aplica el layout guardado con autorandr (se edita con arandr).
 # Va ANTES de asignar desktops para que ya existan todos los monitores.
