@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # Options — iconos FA:  power,  refresh,  lock,  moon,  sign-out
-shutdown=$'  Shutdown'
-reboot=$'  Restart'
-lock=$'  Lock'
-suspend=$'  Sleep'
-logout=$'  Logout'
+shutdown=$'  Apagar'
+reboot=$'  Reiniciar'
+lock=$'  Bloquear'
+suspend=$'  Suspender'
+logout=$'  Salir'
 
 options="$lock\n$suspend\n$logout\n$reboot\n$shutdown"
 
 chosen="$(echo -e "$options" | rofi \
     -theme ~/.config/rofi-mono.rasi \
-    -theme-str 'configuration { show-icons: false; location: 3; } window { width: 220px; x-offset: -30px; y-offset: 70px; } mainbox { children: [ listview ]; padding: 8px; spacing: 8px; } element { padding: 8px 12px; } listview { lines: 5; }' \
-    -p "System" -dmenu -selected-row 0)"
+    -theme-str 'configuration { show-icons: false; location: 3; } window { width: 240px; x-offset: -30px; y-offset: 70px; } mainbox { children: [ listview ]; padding: 8px; spacing: 8px; } element { padding: 8px 12px; } listview { lines: 5; }' \
+    -p "Sistema" -dmenu -selected-row 0)"
 case $chosen in
     $shutdown)
         systemctl poweroff
