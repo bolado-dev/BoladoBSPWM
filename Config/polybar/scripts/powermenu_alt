@@ -1,20 +1,18 @@
 #!/bin/bash
 
-
-rofi_command="rofi -theme ~/.config/rofi-mono.rasi -theme-str 'configuration { show-icons: false; location: 3; } window { width: 22%; x-offset: -30px; y-offset: 70px; } listview { lines: 5; } mainbox { children: [ listview ]; }'"
-
-
 # Options
-shutdown=" Shutdown"
-reboot=" Restart"
-lock=" Lock"
-suspend=" Sleep"
-logout=" Logout"
+shutdown=" Shutdown"
+reboot=" Restart"
+lock=" Lock"
+suspend=" Sleep"
+logout=" Logout"
 
-# Variable passed to rofi
 options="$lock\n$suspend\n$logout\n$reboot\n$shutdown"
 
-chosen="$(echo -e "$options" | $rofi_command -p "System" -dmenu -selected-row 0)"
+chosen="$(echo -e "$options" | rofi \
+    -theme ~/.config/rofi-mono.rasi \
+    -theme-str 'configuration { show-icons: false; location: 3; } window { width: 20%; x-offset: -30px; y-offset: 70px; } listview { lines: 5; } mainbox { children: [ listview ]; }' \
+    -p "System" -dmenu -selected-row 0)"
 case $chosen in
     $shutdown)
         systemctl poweroff
@@ -32,4 +30,3 @@ case $chosen in
         kill -9 -1
         ;;
 esac
-
