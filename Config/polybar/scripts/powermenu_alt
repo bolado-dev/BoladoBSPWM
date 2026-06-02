@@ -11,7 +11,7 @@ options="$lock\n$suspend\n$logout\n$reboot\n$shutdown"
 
 chosen="$(echo -e "$options" | rofi \
     -theme ~/.config/rofi-mono.rasi \
-    -theme-str 'configuration { show-icons: false; location: 3; } window { width: 20%; x-offset: -30px; y-offset: 70px; } listview { lines: 5; } mainbox { children: [ listview ]; }' \
+    -theme-str 'configuration { show-icons: false; location: 3; } window { width: fit-content; x-offset: -30px; y-offset: 70px; } listview { lines: 5; } mainbox { children: [ listview ]; }' \
     -p "System" -dmenu -selected-row 0)"
 case $chosen in
     $shutdown)
