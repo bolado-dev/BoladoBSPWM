@@ -6,8 +6,11 @@ grep -qi 'vmware' /sys/class/dmi/id/sys_vendor 2>/dev/null && vmware-user-suid-w
 
 pgrep -x sxhkd > /dev/null || sxhkd &
 
-# TECLADO: es+us, Alt+Shift para alternar. Síncrono para que no lo sobreescriba el DM.
-# En instalaciones sin /etc/X11/xorg.conf.d/00-keyboard.conf esto es el único mecanismo.
+# TECLADO: es+us, Alt+Shift para alternar.
+# IBus (activado por im-config vía /etc/X11/Xsession.d/70im-config_launch) sobreescribe
+# el layout cuando arranca el primer app GTK. Con use-system-keyboard-layout=true le
+# forzamos a seguir el XKB del sistema en vez de gestionar el suyo propio.
+gsettings set org.freedesktop.ibus.general use-system-keyboard-layout true 2>/dev/null || true
 setxkbmap -layout es,us -model pc105 -option grp:alt_shift_toggle
 
 # Pantallas: aplica el layout guardado con autorandr (se edita con arandr).

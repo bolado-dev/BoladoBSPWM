@@ -358,7 +358,17 @@ EOF
         && info "TTY: layout aplicado en consola" \
         || info "setupcon no disponible, se aplicará al reiniciar"
 
-    # 5. Sesión X actual (si hay DISPLAY)
+    # 5. IBus: forzar que siga el layout del sistema en vez de gestionar el suyo
+    #    im-config inyecta GTK_IM_MODULE=ibus en cada sesión X; cuando IBus arranca
+    #    (al abrir el primer app GTK) sobreescribe el layout si use-system-keyboard-layout=false.
+    if command -v gsettings >/dev/null 2>&1 && \
+       gsettings list-schemas 2>/dev/null | grep -q 'freedesktop.ibus'; then
+        gsettings set org.freedesktop.ibus.general use-system-keyboard-layout true 2>/dev/null \
+            && ok "ibus: use-system-keyboard-layout → true (ya no sobreescribirá el layout)" \
+            || info "ibus: gsettings no accesible (el fix de bspwmrc lo aplica al arrancar sesión)"
+    fi
+
+    # 6. Sesión X actual (si hay DISPLAY)
     [ -n "${DISPLAY:-}" ] && setxkbmap -layout es,us -model pc105 -option grp:alt_shift_toggle 2>/dev/null \
         && info "aplicado en la sesión X actual"
 
