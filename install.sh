@@ -588,7 +588,7 @@ _setup_lightdm() {
         info "Instalando dependencias de compilación..."
         sudo apt install -y \
             build-essential automake pkg-config \
-            liblightdm-gobject-1-dev libgtk-3-dev \
+            liblightdm-gobject-dev libgtk-3-dev \
             && ok "dependencias instaladas" \
             || die "no se pudieron instalar las dependencias de compilación"
 
