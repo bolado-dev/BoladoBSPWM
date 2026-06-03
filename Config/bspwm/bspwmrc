@@ -52,6 +52,16 @@ fi
 # CUSTOM
 bspc config focus_follows_pointer true
 
+# NVIDIA: ForceCompositionPipeline necesario para que picom no vaya a 10fps.
+# Se aplica DESPUÉS de autorandr para coger el MetaMode real del momento.
+if lspci 2>/dev/null | grep -qi 'vga.*nvidia\|nvidia.*vga'; then
+    _meta=$(nvidia-settings -q CurrentMetaMode -t 2>/dev/null)
+    if [ -n "$_meta" ] && ! echo "$_meta" | grep -q 'ForceCompositionPipeline'; then
+        nvidia-settings --assign CurrentMetaMode="$(echo "$_meta" | sed 's/}/,ForceCompositionPipeline=On}/g')" 2>/dev/null || true
+    fi
+    unset _meta
+fi
+
 # PICOM: vsync solo en GPUs no-Intel (en Intel añade input lag; en NVIDIA/AMD
 # evita el freeze donde picom se traba y solo el movimiento del ratón lo destrava)
 if lspci 2>/dev/null | grep -qi 'vga.*intel\|intel.*vga'; then

@@ -483,6 +483,9 @@ install_scripts() {
     [ -f "$RUTA/scripts/settarget" ] && \
         sudo install -m755 "$RUTA/scripts/settarget" /usr/local/bin/settarget && \
         ok "settarget → /usr/local/bin/" || warn "no se pudo instalar settarget"
+    [ -f "$RUTA/scripts/rl" ] && \
+        sudo install -m755 "$RUTA/scripts/rl" /usr/local/bin/rl && \
+        ok "rl → /usr/local/bin/" || warn "no se pudo instalar rl"
 }
 
 reload_services() {
