@@ -579,54 +579,47 @@ _setup_lightdm() {
     sudo apt install -y lightdm \
         && ok "lightdm instalado" || die "no se pudo instalar lightdm"
 
-    # ── 2. web-greeter (reemplaza lightdm-webkit2-greeter en Debian/Kali) ──
-    #    Soporta temas webkit2 como Glorious. Si no está en apt, descarga el deb.
-    if ! dpkg -l web-greeter 2>/dev/null | grep -q '^ii'; then
-        if apt-cache show web-greeter >/dev/null 2>&1; then
-            sudo apt install -y web-greeter \
-                && ok "web-greeter instalado (apt)" || die "web-greeter: falló instalación"
-        else
-            local WG_VER="4.0.0"
-            local WG_URL="https://github.com/JezerM/web-greeter/releases/download/${WG_VER}/web-greeter-${WG_VER}-debian.deb"
-            local WG_DEB="/tmp/web-greeter.deb"
-            info "web-greeter no está en apt — descargando deb (~143 MB)..."
-            wget -q --show-progress -O "$WG_DEB" "$WG_URL" \
-                && ok "web-greeter descargado" || die "no se pudo descargar web-greeter"
-            sudo dpkg -i "$WG_DEB" && ok "web-greeter instalado (deb)" \
-                || { sudo apt install -f -y && ok "web-greeter instalado (dependencias corregidas)"; }
-            rm -f "$WG_DEB"
-        fi
+    # ── 2. lightdm-mini-greeter ───────────────────────────────────────
+    #    No está en repos Kali/Debian — compilar desde fuente (~1 min).
+    #    Deps ligeras: solo GTK3 + liblightdm-gobject (ya presentes en el sistema).
+    if [ -x /usr/bin/lightdm-mini-greeter ]; then
+        ok "lightdm-mini-greeter ya estaba instalado"
     else
-        ok "web-greeter ya estaba instalado"
+        info "Instalando dependencias de compilación..."
+        sudo apt install -y \
+            build-essential automake pkg-config \
+            liblightdm-gobject-1-dev libgtk-3-dev \
+            && ok "dependencias instaladas" \
+            || die "no se pudieron instalar las dependencias de compilación"
+
+        local BUILD_DIR; BUILD_DIR="$(mktemp -d /tmp/mini-greeter-XXXXX)"
+        info "Clonando lightdm-mini-greeter..."
+        git clone --depth 1 https://github.com/prikhi/lightdm-mini-greeter.git "$BUILD_DIR" \
+            && ok "repositorio clonado" || die "no se pudo clonar lightdm-mini-greeter"
+
+        info "Compilando (puede tardar ~1 min)..."
+        (
+            cd "$BUILD_DIR"
+            ./autogen.sh        >/dev/null 2>&1
+            ./configure --datadir /usr/share --bindir /usr/bin --sysconfdir /etc \
+                        >/dev/null 2>&1
+            make                >/dev/null 2>&1
+        ) && sudo make -C "$BUILD_DIR" install >/dev/null 2>&1 \
+            && ok "lightdm-mini-greeter compilado e instalado" \
+            || die "la compilación de lightdm-mini-greeter falló"
+
+        rm -rf "$BUILD_DIR"
     fi
 
-    # ── 3. Tema Glorious ──────────────────────────────────────────────
-    local THEME_DIR="/usr/share/lightdm-webkit/themes/glorious"
-    if [ -d "$THEME_DIR/.git" ]; then
-        info "Glorious: actualizando..."
-        sudo git -C "$THEME_DIR" pull --ff-only -q \
-            && ok "Glorious actualizado" || warn "Glorious: git pull falló (se usa la copia existente)"
-    else
-        info "Clonando lightdm-webkit2-theme-glorious..."
-        sudo git clone --depth 1 \
-            https://github.com/eromatiya/lightdm-webkit2-theme-glorious.git \
-            "$THEME_DIR" \
-            && ok "Glorious clonado → $THEME_DIR" \
-            || die "no se pudo clonar el tema Glorious"
-    fi
-
-    # ── 4. Wallpaper como fondo de login ──────────────────────────────
+    # ── 3. Wallpaper ──────────────────────────────────────────────────
     local WP_SRC="$RUTA/Wallpaper/wp-pc.png"
-    local WP_DEST="/usr/share/backgrounds/bolado-bspwm.png"
+    local WP_DEST="/usr/share/pixmaps/bolado-bspwm.png"
     if [ -f "$WP_SRC" ]; then
         sudo install -Dm644 "$WP_SRC" "$WP_DEST" \
-            && ok "wallpaper → $WP_DEST (visible en selector de Glorious)" \
-            || warn "no se pudo copiar el wallpaper"
-    else
-        warn "wallpaper no encontrado en $WP_SRC"
+            && ok "wallpaper → $WP_DEST" || warn "no se pudo copiar el wallpaper"
     fi
 
-    # ── 5. Cambiar display manager ────────────────────────────────────
+    # ── 4. Cambiar display manager ────────────────────────────────────
     local dm_actual
     dm_actual=$(systemctl show display-manager --property=Id --value 2>/dev/null | sed 's/\.service//')
     if [ -n "$dm_actual" ] && [ "$dm_actual" != "lightdm" ]; then
@@ -636,11 +629,17 @@ _setup_lightdm() {
     sudo systemctl enable lightdm \
         && ok "lightdm habilitado como display manager" || warn "no se pudo habilitar lightdm"
 
-    # ── 6. Configurar lightdm + web-greeter ───────────────────────────
-    sudo install -Dm644 "$RUTA/lightdm/lightdm.conf"    /etc/lightdm/lightdm.conf
-    sudo install -Dm644 "$RUTA/lightdm/web-greeter.conf" /etc/lightdm/web-greeter.conf
-    ok "lightdm.conf → greeter: web-greeter · sesión: bspwm"
-    ok "web-greeter.conf → tema: Glorious · wallpaper: /usr/share/backgrounds/"
+    # ── 5. Configs ────────────────────────────────────────────────────
+    sudo install -Dm644 "$RUTA/lightdm/lightdm.conf" /etc/lightdm/lightdm.conf
+    sudo install -Dm644 "$RUTA/lightdm/lightdm-mini-greeter.conf" \
+                        /etc/lightdm/lightdm-mini-greeter.conf
+
+    # Sustituir placeholder con el usuario que instaló
+    sudo sed -i "s/BOLADO_USER/${USER}/" /etc/lightdm/lightdm-mini-greeter.conf \
+        && ok "greeter: usuario → ${USER}"
+
+    ok "lightdm.conf → greeter: lightdm-mini-greeter · sesión: bspwm"
+    ok "tema terminal: #0d0d0d · Monospace · prompt '\$' · user@host + reloj"
 }
 
 configure_display_manager() {
