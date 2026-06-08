@@ -633,9 +633,17 @@ _setup_lightdm() {
         && ok "lightdm habilitado como display manager" || warn "no se pudo habilitar lightdm"
 
     # ── 5. Configs ────────────────────────────────────────────────────
-    sudo install -Dm644 "$RUTA/lightdm/lightdm.conf" /etc/lightdm/lightdm.conf
-    sudo install -Dm644 "$RUTA/lightdm/lightdm-mini-greeter.conf" \
-                        /etc/lightdm/lightdm-mini-greeter.conf
+    # Eliminar configs en conf.d que podrían tener precedencia sobre lightdm.conf
+    if [ -d /etc/lightdm/lightdm.conf.d ]; then
+        sudo rm -f /etc/lightdm/lightdm.conf.d/*.conf 2>/dev/null || true
+        info "lightdm.conf.d limpiado (configs conflictivas eliminadas)"
+    fi
+
+    sudo cp -f "$RUTA/lightdm/lightdm.conf" /etc/lightdm/lightdm.conf \
+        && ok "lightdm.conf sobreescrito" || die "no se pudo escribir /etc/lightdm/lightdm.conf"
+    sudo cp -f "$RUTA/lightdm/lightdm-mini-greeter.conf" /etc/lightdm/lightdm-mini-greeter.conf \
+        && ok "lightdm-mini-greeter.conf sobreescrito" \
+        || die "no se pudo escribir /etc/lightdm/lightdm-mini-greeter.conf"
 
     # Sustituir placeholder con el usuario que instaló
     sudo sed -i "s/BOLADO_USER/${USER}/" /etc/lightdm/lightdm-mini-greeter.conf \
