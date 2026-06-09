@@ -47,9 +47,8 @@ def upgrade(sock, rows, cols):
     )
     sock.sendall(cmd.encode())
     time.sleep(1.0)
-    # stty -echo: el remoto no devuelve los caracteres → sin doble eco
     sock.sendall(
-        f"export TERM=xterm-256color; "
+        f"\nexport TERM=xterm-256color; "
         f"stty rows {rows} cols {cols} -echo; "
         f"export HISTFILE=/dev/null; "
         f"source /etc/skel/.bashrc 2>/dev/null\n".encode()
@@ -159,6 +158,19 @@ def main():
                 t = threading.Thread(target=upgrade, args=(conn, rows, cols), daemon=True)
                 t.start()
                 t.join()
+
+                # Drenar ruido del upgrade (eco comandos, mensajes bash)
+                time.sleep(0.2)
+                conn.setblocking(False)
+                try:
+                    while conn.recv(4096):
+                        pass
+                except (BlockingIOError, socket.timeout):
+                    pass
+                conn.setblocking(True)
+                # Provocar prompt fresco
+                conn.sendall(b"\n")
+                time.sleep(0.15)
 
             print(f"{TAG} sesión activa  {DIM}Ctrl+C para cerrar{RST}\n")
             try:
