@@ -19,8 +19,8 @@ autorandr --change 2>/dev/null
 
 bspc monitor -d I II III IV V VI VII VIII IX X
 
-bspc config border_width         2
-bspc config window_gap          12
+bspc config border_width         0
+bspc config window_gap           6
 
 bspc config split_ratio          0.52
 bspc config borderless_monocle   true
@@ -41,6 +41,24 @@ feh --bg-fill ~/Imágenes/wp-pc.png
 
 # POLYBAR
 ~/.config/polybar/launch.sh
+
+# Reserva exacta para la barra flush (alto 28). Determinista: evita el hueco
+# enorme si bspwm cachea un strut viejo al cambiar de barra. Ajustar si cambia
+# el `height` de [bar/pill]. window_gap añade los ~6px de aire bajo la barra.
+bspc config top_padding 28
+
+# SERVICIOS (arrancan solo si están instalados)
+# greenclip: daemon del historial de portapapeles (Super+V para abrirlo)
+if command -v greenclip >/dev/null 2>&1; then
+    pgrep -f 'greenclip daemon' >/dev/null || greenclip daemon &
+fi
+# dunst: notificaciones temadas. Mata el notifyd de xfce (reclama el mismo bus)
+# antes de arrancar, para que dunst pueda adueñarse de org.freedesktop.Notifications.
+if command -v dunst >/dev/null 2>&1; then
+    pkill -x xfce4-notifyd 2>/dev/null
+    pkill -x dunst 2>/dev/null
+    dunst &
+fi
 
 # Sin batería (escritorio): sin ahorro de energía / no apagar pantalla / CPU a tope
 if ! ls /sys/class/power_supply/ 2>/dev/null | grep -qiE '^BAT'; then
@@ -69,6 +87,7 @@ if lspci 2>/dev/null | grep -qi 'vga.*intel\|intel.*vga'; then
 else
     picom --vsync &
 fi
+# Sin bordes (look limpio, monocromo)
 bspc config border_width 0
 
 xsetroot -cursor_name left_ptr &

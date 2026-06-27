@@ -18,6 +18,30 @@ super + shift + l
 super + d
 	rofi -show drun -theme ~/.config/rofi-mono.rasi
 
+# historial de portapapeles (greenclip)
+super + v
+	~/.config/bin/clipboard.sh
+
+# nota rápida al notes.md del target activo
+super + n
+	~/.config/bin/qnote.sh
+
+# cheatsheet de pentest (revshells con LHOST de tun0 ya puesto)
+alt + F2
+	~/.config/bin/cheatsheet.sh
+
+# OCR de una región -> texto al portapapeles
+super + shift + s
+	~/.config/bin/ocr.sh
+
+# grabación de pantalla (toggle: 1ª selecciona y graba, 2ª para)
+super + shift + r
+	~/.config/bin/screenrec.sh
+
+# modo limpio para compartir pantalla (sin gaps ni barra)
+super + F12
+	~/.config/bin/clean_toggle.sh
+
 #########################
 # volume / brightness   #
 # media keys (XF86)     #
@@ -181,14 +205,14 @@ super + shift + b
 # ScreenShots #
 ###############
 
-# selección interactiva (región) con editor de flameshot
+# región interactiva -> carpeta del target activo (content/) o ~/ScreenShots
 @Print
-        flameshot gui -p ~/ScreenShots -c
+        ~/.config/bin/shot.sh region
 
-# pantalla completa guardada en ~/ScreenShots
+# pantalla completa -> carpeta del target activo o ~/ScreenShots
 ctrl + Print
-        flameshot full -p ~/ScreenShots -c
+        ~/.config/bin/shot.sh full
 
 # pantalla completa directa al portapapeles
 shift + Print
-        flameshot full -c
+        ~/.config/bin/shot.sh clip

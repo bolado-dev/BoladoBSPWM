@@ -71,6 +71,8 @@ source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 #source /usr/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 [[ -f ~/.config/zsh/sudo.plugin.zsh ]] && source ~/.config/zsh/sudo.plugin.zsh
+# Utilidades de pentest (newbox, qnote, cdt, lhost) + power-ups de shell
+[[ -f ~/.config/zsh/pentest.zsh ]] && source ~/.config/zsh/pentest.zsh
 
 # Functions
 function mkt(){
@@ -305,3 +307,8 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME/bin:$PATH" ;;
 esac
 # pnpm end
+
+# atuin — historial buscable (Ctrl-R). --disable-up-arrow: la flecha arriba
+# sigue siendo el comando anterior de siempre. Va al final (sitio recomendado).
+[ -f "$HOME/.atuin/bin/env" ] && . "$HOME/.atuin/bin/env"
+command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh --disable-up-arrow)"

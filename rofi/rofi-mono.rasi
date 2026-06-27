@@ -5,16 +5,17 @@
 
 configuration {
   show-icons:          true;
+  icon-theme:          "Flat-Remix-Slate-Dark";
   drun-display-format: "{icon}  {name}";
-  display-drun:        "  apps";
-  display-run:         "  run";
-  display-window:      "  win";
+  display-drun:        "apps";
+  display-run:         "run";
+  display-window:      "win";
   modi:                "drun,run,window";
 }
 
 * {
-  bg:        #141414;
-  bg-alt:    #1f1f1f;
+  bg:        #0d0d0d;
+  bg-alt:    #141414;
   fg:        #f0f0f0;
   fg-muted:  #8a8a8a;
   accent:    #f0f0f0;
@@ -29,47 +30,48 @@ configuration {
 window {
   background-color: @bg;
   border:           0;
-  border-radius:    14px;
-  width:            38%;
+  border-radius:    0;
+  width:            34%;
   padding:          0;
 }
 
 mainbox {
   children: [ inputbar, listview ];
-  padding:  14px;
-  spacing:  12px;
+  padding:  10px;
+  spacing:  8px;
 }
 
 inputbar {
   background-color: @bg-alt;
-  border-radius:    10px;
-  padding:          12px 16px;
-  spacing:          10px;
+  border-radius:    0;
+  padding:          8px 10px;
+  spacing:          8px;
   children:         [ prompt, entry ];
 }
 
 prompt {
   text-color: @accent;
+  str:        ">";
 }
 
 entry {
   text-color:        @fg;
-  placeholder:       "Buscar…";
+  placeholder:       "search…";
   placeholder-color: @fg-muted;
 }
 
 listview {
   columns:      1;
-  lines:        8;
+  lines:        6;
   fixed-height: false;
   scrollbar:    false;
-  spacing:      4px;
+  spacing:      2px;
 }
 
 element {
-  padding:       10px 14px;
-  border-radius: 10px;
-  spacing:       12px;
+  padding:       6px 10px;
+  border-radius: 0;
+  spacing:       10px;
   text-color:    @fg;
 }
 
