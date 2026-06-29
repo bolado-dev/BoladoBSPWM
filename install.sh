@@ -434,7 +434,7 @@ adapt_hardware() {
             if [ "$ASSUME_YES" -eq 1 ]; then sel=1; else
                 read -rp "  → ¿Cuál es el monitor PRIMARIO? [1]: " sel; fi
             sel=${sel:-1}; primary="${mons[$((sel-1))]}"; [ -z "$primary" ] && primary="${mons[0]}"
-            xrandr --output "$primary" --primary 2>/dev/null
+            xrandr --output "$primary" --auto --primary 2>/dev/null
             info "primario: $primary → desktops I-V"
 
             # 2) arandr para colocar arrastrando; al pulsar «Aplicar» se cierra solo y se guarda
