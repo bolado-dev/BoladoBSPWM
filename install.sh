@@ -260,8 +260,11 @@ set_permissions() {
     chmod +x "$HOME"/.config/polybar/scripts/*    2>/dev/null
     chmod +x "$HOME"/.config/bin/*.sh             2>/dev/null
     mkdir -p "$HOME/ScreenShots" "$HOME/Imágenes"
-    [ -f "$RUTA"/Wallpaper/wp-pc.png ] && cp "$RUTA"/Wallpaper/wp-pc.png "$HOME/Imágenes/"
-    ok "ejecutables + carpetas (~/ScreenShots, wallpaper)"
+    # Copia todos los wallpapers del repo a ~/Imágenes/ (bspwmrc referencia wp-tn-cafe.png)
+    for wp in "$RUTA"/Wallpaper/*.png; do
+        [ -f "$wp" ] && cp -f "$wp" "$HOME/Imágenes/"
+    done
+    ok "ejecutables + carpetas (~/ScreenShots, wallpapers)"
 }
 
 # ── Adaptación a hardware ──────────────────────────────────────────
@@ -614,12 +617,20 @@ _setup_lightdm() {
         rm -rf "$BUILD_DIR"
     fi
 
-    # ── 3. Wallpaper ──────────────────────────────────────────────────
-    local WP_SRC="$RUTA/Wallpaper/wp-pc.png"
+    # ── 3. Wallpaper del greeter (login screen) ──────────────────────
+    # Prefiere el café lo-fi (mismo que usa el escritorio); fallback a wp-pc.png
+    local WP_SRC=""
+    for cand in wp-tn-cafe.png wp-kanagawa.png wp-pc.png; do
+        if [ -f "$RUTA/Wallpaper/$cand" ]; then
+            WP_SRC="$RUTA/Wallpaper/$cand"
+            break
+        fi
+    done
     local WP_DEST="/usr/share/pixmaps/bolado-bspwm.png"
-    if [ -f "$WP_SRC" ]; then
+    if [ -n "$WP_SRC" ]; then
         sudo install -Dm644 "$WP_SRC" "$WP_DEST" \
-            && ok "wallpaper → $WP_DEST" || warn "no se pudo copiar el wallpaper"
+            && ok "wallpaper login → $WP_DEST ($(basename "$WP_SRC"))" \
+            || warn "no se pudo copiar el wallpaper del greeter"
     fi
 
     # ── 4. Cambiar display manager ────────────────────────────────────
