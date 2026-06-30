@@ -259,6 +259,7 @@ set_permissions() {
     chmod +x "$HOME"/.config/polybar/launch.sh    2>/dev/null
     chmod +x "$HOME"/.config/polybar/scripts/*    2>/dev/null
     chmod +x "$HOME"/.config/bin/*.sh             2>/dev/null
+    chmod +x "$HOME"/.config/autorandr/postswitch 2>/dev/null
     mkdir -p "$HOME/ScreenShots" "$HOME/Imágenes"
     # Copia todos los wallpapers del repo a ~/Imágenes/ (bspwmrc referencia wp-tn-cafe.png)
     for wp in "$RUTA"/Wallpaper/*.png; do

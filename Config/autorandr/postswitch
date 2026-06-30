@@ -1,0 +1,15 @@
+#!/bin/sh
+# autorandr postswitch hook
+# Se ejecuta cada vez que autorandr cambia de perfil (boot, conectar/desconectar
+# un monitor, hotplug por udev, autostart GTK). Re-aplica el wallpaper y
+# reinicia bspwm para que el reparto dinámico de workspaces de bspwmrc se
+# vuelva a calcular con la lista de monitores actual.
+
+# Wallpaper (no falla si feh no está o el archivo no existe)
+[ -n "${DISPLAY:-}" ] && command -v feh >/dev/null 2>&1 \
+    && feh --bg-fill ~/Imágenes/wp-tn-cafe.png 2>/dev/null
+
+# Reload bspwm — solo si está corriendo
+if [ -n "${DISPLAY:-}" ] && pgrep -x bspwm >/dev/null 2>&1; then
+    bspc wm -r 2>/dev/null
+fi

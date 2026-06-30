@@ -16,18 +16,44 @@ setxkbmap -layout es,us -model pc105 -option grp:alt_shift_toggle
 # Pantallas: aplica el layout guardado con autorandr (se edita con arandr).
 # En el primer arranque el driver KMS aún puede estar leyendo EDID del segundo
 # monitor cuando bspwm se levanta — autorandr corría con un solo output detectado
-# y dejaba la otra pantalla muerta hasta el super+alt+r. Esperamos a que el
-# conjunto de outputs conectados se estabilice (dos lecturas idénticas) antes
-# de aplicar el perfil; máximo ~3 s, en el caso normal sale en <1 s.
-_prev=""; _stable=""
-for _i in 1 2 3 4 5 6 7 8; do
+# y dejaba la otra pantalla muerta hasta el super+alt+r. Estrategia en 2 fases:
+#
+#   1) Aquí, sincrono: esperamos hasta ~5 s a que la lista de outputs
+#      conectados se estabilice (dos lecturas idénticas) Y a que coincida
+#      con algún perfil de autorandr.
+#   2) En background: un watchdog reintenta otros ~25 s si el monitor llega
+#      muy tarde (caso típico drivers NVIDIA propietarios). Cuando detecta
+#      cambio, re-aplica autorandr y reinicia bspwm para que el reparto
+#      dinámico de workspaces vuelva a correr con todos los monitores.
+_prev=""
+for _i in 1 2 3 4 5 6 7 8 9 10; do
     _cur=$(xrandr -q 2>/dev/null | awk '/ connected/{print $1}' | sort | paste -sd, -)
-    if [ -n "$_cur" ] && [ "$_cur" = "$_prev" ]; then _stable=1; break; fi
+    _det=$(autorandr --detected 2>/dev/null | head -1)
+    [ -n "$_cur" ] && [ "$_cur" = "$_prev" ] && [ -n "$_det" ] && break
     _prev="$_cur"
-    sleep 0.4
+    sleep 0.5
 done
 autorandr --change 2>/dev/null
-unset _prev _cur _stable _i
+unset _prev _cur _det _i
+
+# Watchdog: en arranques con NVIDIA + monitor secundario lento, los pasos de
+# arriba pueden terminar viendo solo HDMI/DP-4. Reintentamos en background
+# hasta 25 s; si la lista de conectados cambia, re-aplicamos autorandr y
+# disparamos `bspc wm -r` para que se reasignen los workspaces.
+(
+    _seen=$(xrandr -q 2>/dev/null | awk '/ connected/{print $1}' | sort | paste -sd, -)
+    _t=0
+    while [ "$_t" -lt 50 ]; do
+        sleep 0.5
+        _t=$(( _t + 1 ))
+        _now=$(xrandr -q 2>/dev/null | awk '/ connected/{print $1}' | sort | paste -sd, -)
+        if [ -n "$_now" ] && [ "$_now" != "$_seen" ]; then
+            autorandr --change 2>/dev/null
+            bspc wm -r 2>/dev/null
+            break
+        fi
+    done
+) &
 
 # Reparto DINÁMICO de los 10 desktops romanos entre los monitores conectados.
 # Antes este reparto lo hacía el instalador con un sed sobre bspwmrc en
