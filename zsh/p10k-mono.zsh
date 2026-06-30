@@ -15,7 +15,6 @@ typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
   dir
   vcs
   custom_htb_target
-  vpn_ip
   prompt_char
 )
 typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
@@ -100,15 +99,6 @@ typeset -g POWERLEVEL9K_CUSTOM_HTB_TARGET="cat \$HOME/.config/htb_target 2>/dev/
 typeset -g POWERLEVEL9K_CUSTOM_HTB_TARGET_FOREGROUND=179
 typeset -g POWERLEVEL9K_CUSTOM_HTB_TARGET_VISUAL_IDENTIFIER_EXPANSION='⌖'
 typeset -g POWERLEVEL9K_CUSTOM_HTB_TARGET_BACKGROUND=
-
-# ─────────────────────────────────────────────
-#  VPN IP (built-in) — tun0 en verde, oculto si VPN abajo
-# ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_VPN_IP_INTERFACES='tun*'
-typeset -g POWERLEVEL9K_VPN_IP_FOREGROUND=101
-typeset -g POWERLEVEL9K_VPN_IP_BACKGROUND=
-typeset -g POWERLEVEL9K_VPN_IP_VISUAL_IDENTIFIER_EXPANSION='󰒍'
-typeset -g POWERLEVEL9K_VPN_IP_SHOW_ALL=false
 
 # ─────────────────────────────────────────────
 #  Lado derecho
