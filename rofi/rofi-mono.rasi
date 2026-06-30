@@ -1,11 +1,11 @@
 /* ─────────────────────────────────────────────
-   Tema rofi monocromo + ámbar (a juego con polybar/kitty/p10k)
+   Tema rofi · Kanagawa Wave
    Uso: rofi -show drun -theme ~/.config/rofi-mono.rasi
    ───────────────────────────────────────────── */
 
 configuration {
   show-icons:          true;
-  icon-theme:          "Flat-Remix-Slate-Dark";
+  icon-theme:          "Papirus-Dark";
   drun-display-format: "{icon}  {name}";
   display-drun:        "apps";
   display-run:         "run";
@@ -14,13 +14,15 @@ configuration {
 }
 
 * {
-  bg:        #0d0d0d;
-  bg-alt:    #141414;
-  fg:        #f0f0f0;
-  fg-muted:  #8a8a8a;
-  accent:    #f0f0f0;
-  urgent:    #e05561;
-  dark:      #0d0d0d;
+  bg:        #1F1F28;
+  bg-alt:    #2A2A37;
+  bg-soft:   #363646;
+  fg:        #DCD7BA;
+  fg-muted:  #727169;
+  accent:    #957FB8;
+  accent-2:  #7E9CD8;
+  urgent:    #C34043;
+  dark:      #16161D;
 
   background-color: transparent;
   text-color:       @fg;
@@ -29,29 +31,30 @@ configuration {
 
 window {
   background-color: @bg;
-  border:           0;
-  border-radius:    0;
-  width:            34%;
+  border:           1px;
+  border-color:     @accent;
+  border-radius:    10px;
+  width:            36%;
   padding:          0;
 }
 
 mainbox {
   children: [ inputbar, listview ];
-  padding:  10px;
-  spacing:  8px;
+  padding:  12px;
+  spacing:  10px;
 }
 
 inputbar {
   background-color: @bg-alt;
-  border-radius:    0;
-  padding:          8px 10px;
-  spacing:          8px;
+  border-radius:    6px;
+  padding:          10px 12px;
+  spacing:          10px;
   children:         [ prompt, entry ];
 }
 
 prompt {
   text-color: @accent;
-  str:        ">";
+  str:        "❯";
 }
 
 entry {
@@ -62,21 +65,21 @@ entry {
 
 listview {
   columns:      1;
-  lines:        6;
+  lines:        7;
   fixed-height: false;
   scrollbar:    false;
-  spacing:      2px;
+  spacing:      3px;
 }
 
 element {
-  padding:       6px 10px;
-  border-radius: 0;
-  spacing:       10px;
+  padding:       7px 12px;
+  border-radius: 4px;
+  spacing:       12px;
   text-color:    @fg;
 }
 
 element normal urgent { text-color: @urgent; }
-element normal active  { text-color: @accent; }
+element normal active  { text-color: @accent-2; }
 
 element selected {
   background-color: @accent;
@@ -88,7 +91,7 @@ element selected urgent {
 }
 
 element-icon {
-  size:           1.2em;
+  size:           1.3em;
   vertical-align: 0.5;
 }
 

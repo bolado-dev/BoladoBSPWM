@@ -1,15 +1,32 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
   "logo": {
-    "type": "data",
-    "source": "$1 ▄▄▄▄    ▒█████   ██▓    ▄▄▄      ▓█████▄  ▒█████\n$1▓█████▄ ▒██▒  ██▒▓██▒   ▒████▄    ▒██▀ ██▌▒██▒  ██▒\n$1▒██▒ ▄██▒██░  ██▒▒██░   ▒██  ▀█▄  ░██   █▌▒██░  ██▒\n$1▒██░█▀  ▒██   ██░▒██░   ░██▄▄▄▄██ ░▓█▄   ▌▒██   ██░\n$1░▓█  ▀█▓░ ████▓▒░░██████▒▓█   ▓██▒░▒████▓ ░ ████▓▒░\n$1░▒▓███▀▒░ ▒░▒░▒░ ░ ▒░▓  ░▒▒   ▓▒█░ ▒▒▓  ▒ ░ ▒░▒░▒░\n$1▒░▒   ░   ░ ▒ ▒░ ░ ░ ▒  ░ ▒   ▒▒ ░ ░ ▒  ▒   ░ ▒ ▒░\n$1 ░    ░ ░ ░ ░ ▒    ░ ░    ░   ▒    ░ ░  ░ ░ ░ ░ ▒\n$1 ░          ░ ░      ░  ░     ░  ░   ░        ░ ░\n$1      ░                            ░\n",
-    "color": {
-      "1": "38;5;245"
-    },
-    "padding": {
-      "top": 1,
-      "left": 1
-    }
+    "type": "auto",
+    "padding": { "top": 1, "right": 2 }
   },
-  "modules": []
+  "display": {
+    "color": {
+      "keys": "38;2;149;127;184",
+      "title": "38;2;149;127;184"
+    },
+    "separator": "  "
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "wm",
+    "terminal",
+    "cpu",
+    "gpu",
+    "memory",
+    "disk",
+    "localip",
+    "break",
+    "colors"
+  ]
 }
