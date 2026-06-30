@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   Tema rofi · Kanagawa Wave
+   Tema rofi · Paleta mínima — mono + acento violeta
    Uso: rofi -show drun -theme ~/.config/rofi-mono.rasi
    ───────────────────────────────────────────── */
 
@@ -14,13 +14,13 @@ configuration {
 }
 
 * {
-  bg:        #1F1F28;
-  bg-alt:    #2A2A37;
-  bg-soft:   #363646;
+  bg:        #16161D;
+  bg-alt:    #16161D;
+  bg-soft:   #16161D;
   fg:        #DCD7BA;
-  fg-muted:  #727169;
+  fg-muted:  #54546D;
   accent:    #957FB8;
-  accent-2:  #7E9CD8;
+  accent-2:  #957FB8;
   urgent:    #C34043;
   dark:      #16161D;
 

@@ -1,13 +1,14 @@
-/* Color-Scheme For All Themes*/
+/* Paleta mínima — mono + 1 acento (violeta).
+ * Compartida por launcher/powermenu/powermenu_alt vía @import "colors.rasi" */
 
 * {
-    background:    #ffffffff;
-    background-alt:    #ffffffff;
-    foreground:    #606060ff;
-    border:    #5895DCff;
-    selected:    #5895DCff;
-    urgent:    #EC407Aff;
-	logo:    #EC407Aff;
-	on:    #61C766ff;
-	off:    #EC7875ff;
+    background:        #16161Dff;
+    background-alt:    #16161Dff;
+    foreground:        #DCD7BAff;
+    border:            #957FB8ff;
+    selected:          #957FB8ff;
+    urgent:            #C34043ff;
+    logo:              #957FB8ff;
+    on:                #957FB8ff;
+    off:               #54546Dff;
 }
