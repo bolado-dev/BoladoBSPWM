@@ -29,7 +29,43 @@ done
 autorandr --change 2>/dev/null
 unset _prev _cur _stable _i
 
-bspc monitor -d I II III IV V VI VII VIII IX X
+# Reparto DINÁMICO de los 10 desktops romanos entre los monitores conectados.
+# Antes este reparto lo hacía el instalador con un sed sobre bspwmrc en
+# adapt_hardware: cualquier `cp -rf Config/*` o `install.sh --refresh` revertía
+# la línea a un único bspc monitor, mandando los 10 desktops a una sola
+# pantalla y dejando la otra vacía. Lo resolvemos en runtime para que el
+# layout sobreviva a refresh sin necesidad de re-correr adapt_hardware.
+# Sacamos los monitores de xrandr (no de `bspc query`) para evitar el race
+# con eventos RandR que bspwm aún no haya procesado en el primer arranque.
+_primary=$(xrandr -q 2>/dev/null | awk '/ connected primary/{print $1; exit}')
+_mons=$(xrandr -q 2>/dev/null | awk '/ connected/{print $1}')
+_n=$(printf '%s\n' "$_mons" | grep -c .)
+case "$_n" in
+    0|1)
+        bspc monitor -d I II III IV V VI VII VIII IX X
+        ;;
+    2)
+        _p="${_primary:-$(printf '%s\n' "$_mons" | head -1)}"
+        _s=$(printf '%s\n' "$_mons" | grep -vx "$_p" | head -1)
+        bspc monitor "$_p" -d I II III IV V
+        bspc monitor "$_s" -d VI VII VIII IX X
+        ;;
+    *)
+        # 3+ pantallas: reparte lo mejor que puede (resto al primero).
+        _per=$(( 10 / _n )); _rest=$(( 10 - _per * _n ))
+        _names="I II III IV V VI VII VIII IX X"
+        _idx=1
+        for _m in $_mons; do
+            _take=$_per
+            [ "$_rest" -gt 0 ] && _take=$(( _take + 1 )) && _rest=$(( _rest - 1 ))
+            _slice=$(echo "$_names" | cut -d' ' -f${_idx}-$(( _idx + _take - 1 )))
+            bspc monitor "$_m" -d $_slice
+            _idx=$(( _idx + _take ))
+        done
+        unset _per _rest _names _idx _take _slice _m
+        ;;
+esac
+unset _mons _n _p _s _primary
 
 bspc config split_ratio          0.52
 bspc config borderless_monocle   true

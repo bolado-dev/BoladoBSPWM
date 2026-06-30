@@ -465,13 +465,9 @@ adapt_hardware() {
                 warn "autorandr no está instalado: el layout no se auto-aplicará"
             fi
 
-            # 4) Repartir desktops: primario I-V, el siguiente monitor VI-X
-            local secondary
-            secondary=$(printf '%s\n' "${mons[@]}" | grep -vx "$primary" | head -1)
-            if [ -n "$secondary" ] && grep -qE '^bspc monitor -d ' "$BSPWMRC"; then
-                sed -i "s|^bspc monitor -d .*|bspc monitor \"$primary\" -d I II III IV V\nbspc monitor \"$secondary\" -d VI VII VIII IX X|" "$BSPWMRC"
-                info "desktops: $primary → I-V · $secondary → VI-X"
-            fi
+            # 4) Reparto de desktops: lo hace bspwmrc en runtime (detecta xrandr),
+            #    para que sobreviva a --refresh / cp -rf sin necesidad de
+            #    re-correr adapt_hardware. Aquí ya no tocamos bspwmrc.
             _polybar_py pillmonitor
         fi
     fi
