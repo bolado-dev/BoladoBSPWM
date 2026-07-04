@@ -14,97 +14,17 @@ gsettings set org.freedesktop.ibus.general use-system-keyboard-layout true 2>/de
 setxkbmap -layout es,us -model pc105 -option grp:alt_shift_toggle
 
 # Pantallas: aplica el layout guardado con autorandr (se edita con arandr).
-# En el primer arranque el driver KMS aún puede estar leyendo EDID del segundo
-# monitor cuando bspwm se levanta — autorandr corría con un solo output detectado
-# y dejaba la otra pantalla muerta hasta el super+alt+r. Estrategia en 2 fases:
-#
-#   1) Aquí, sincrono: esperamos hasta ~5 s a que la lista de outputs
-#      conectados se estabilice (dos lecturas idénticas) Y a que coincida
-#      con algún perfil de autorandr.
-#   2) En background: un watchdog reintenta otros ~25 s si el monitor llega
-#      muy tarde (caso típico drivers NVIDIA propietarios). Cuando detecta
-#      cambio, re-aplica autorandr y reinicia bspwm para que el reparto
-#      dinámico de workspaces vuelva a correr con todos los monitores.
-_prev=""
-for _i in 1 2 3 4 5 6 7 8 9 10; do
-    _cur=$(xrandr -q 2>/dev/null | awk '/ connected/{print $1}' | sort | paste -sd, -)
-    _det=$(autorandr --detected 2>/dev/null | head -1)
-    [ -n "$_cur" ] && [ "$_cur" = "$_prev" ] && [ -n "$_det" ] && break
-    _prev="$_cur"
-    sleep 0.5
-done
+# Va ANTES de asignar desktops para que ya existan todos los monitores.
 autorandr --change 2>/dev/null
-unset _prev _cur _det _i
 
-# Watchdog: en arranques con NVIDIA + monitor secundario lento, los pasos de
-# arriba pueden terminar viendo solo HDMI/DP-4. Reintentamos en background
-# hasta 25 s; si la lista de conectados cambia, re-aplicamos autorandr y
-# disparamos `bspc wm -r` para que se reasignen los workspaces.
-(
-    _seen=$(xrandr -q 2>/dev/null | awk '/ connected/{print $1}' | sort | paste -sd, -)
-    _t=0
-    while [ "$_t" -lt 50 ]; do
-        sleep 0.5
-        _t=$(( _t + 1 ))
-        _now=$(xrandr -q 2>/dev/null | awk '/ connected/{print $1}' | sort | paste -sd, -)
-        if [ -n "$_now" ] && [ "$_now" != "$_seen" ]; then
-            autorandr --change 2>/dev/null
-            bspc wm -r 2>/dev/null
-            break
-        fi
-    done
-) &
+bspc monitor -d I II III IV V VI VII VIII IX X
 
-# Reparto DINÁMICO de los 10 desktops romanos entre los monitores conectados.
-# Antes este reparto lo hacía el instalador con un sed sobre bspwmrc en
-# adapt_hardware: cualquier `cp -rf Config/*` o `install.sh --refresh` revertía
-# la línea a un único bspc monitor, mandando los 10 desktops a una sola
-# pantalla y dejando la otra vacía. Lo resolvemos en runtime para que el
-# layout sobreviva a refresh sin necesidad de re-correr adapt_hardware.
-# Sacamos los monitores de xrandr (no de `bspc query`) para evitar el race
-# con eventos RandR que bspwm aún no haya procesado en el primer arranque.
-_primary=$(xrandr -q 2>/dev/null | awk '/ connected primary/{print $1; exit}')
-_mons=$(xrandr -q 2>/dev/null | awk '/ connected/{print $1}')
-_n=$(printf '%s\n' "$_mons" | grep -c .)
-case "$_n" in
-    0|1)
-        bspc monitor -d I II III IV V VI VII VIII IX X
-        ;;
-    2)
-        _p="${_primary:-$(printf '%s\n' "$_mons" | head -1)}"
-        _s=$(printf '%s\n' "$_mons" | grep -vx "$_p" | head -1)
-        bspc monitor "$_p" -d I II III IV V
-        bspc monitor "$_s" -d VI VII VIII IX X
-        ;;
-    *)
-        # 3+ pantallas: reparte lo mejor que puede (resto al primero).
-        _per=$(( 10 / _n )); _rest=$(( 10 - _per * _n ))
-        _names="I II III IV V VI VII VIII IX X"
-        _idx=1
-        for _m in $_mons; do
-            _take=$_per
-            [ "$_rest" -gt 0 ] && _take=$(( _take + 1 )) && _rest=$(( _rest - 1 ))
-            _slice=$(echo "$_names" | cut -d' ' -f${_idx}-$(( _idx + _take - 1 )))
-            bspc monitor "$_m" -d $_slice
-            _idx=$(( _idx + _take ))
-        done
-        unset _per _rest _names _idx _take _slice _m
-        ;;
-esac
-unset _mons _n _p _s _primary
+bspc config border_width         0
+bspc config window_gap           6
 
 bspc config split_ratio          0.52
 bspc config borderless_monocle   true
 bspc config gapless_monocle      true
-
-bspc config border_width          2
-bspc config window_gap            12
-# Bordes: mono + 1 acento (violeta).
-#   normal  = gris muy bajo · active = gris medio · focused = accent · presel = accent
-bspc config normal_border_color   "#1F1F28"
-bspc config active_border_color   "#54546D"
-bspc config focused_border_color  "#957FB8"
-bspc config presel_feedback_color "#957FB8"
 
 bspc rule -a Gimp desktop='VIII' state=floating follow=on
 bspc rule -a Chromium desktop='II'
@@ -117,15 +37,15 @@ bspc rule -a float-help state=floating center=on
 
 
 # WALLPAPER
-feh --bg-fill ~/Imágenes/wp-tn-cafe.png 2>/dev/null || true
+feh --bg-fill ~/Imágenes/wp-senna.png
 
 # POLYBAR
 ~/.config/polybar/launch.sh
 
-# Reserva exacta para la barra flush (alto 28). Determinista: evita el hueco
-# enorme si bspwm cachea un strut viejo al cambiar de barra. Ajustar si cambia
-# el `height` de [bar/pill]. window_gap añade los ~6px de aire bajo la barra.
-bspc config top_padding 36
+# Reserva para la pill FLOTANTE: offset-y(6) + height(40) = 46. window_gap(6)
+# se añade automáticamente debajo → la terminal queda a 6px de la pill, el
+# mismo margen que deja a los lados/abajo. Ajustar si cambia offset-y/height.
+bspc config top_padding 46
 
 # SERVICIOS (arrancan solo si están instalados)
 # greenclip: daemon del historial de portapapeles (Super+V para abrirlo)
@@ -167,6 +87,7 @@ if lspci 2>/dev/null | grep -qi 'vga.*intel\|intel.*vga'; then
 else
     picom --vsync &
 fi
-# bordes definidos al inicio (Tokyo Night)
+# Sin bordes (look limpio, monocromo)
+bspc config border_width 0
 
 xsetroot -cursor_name left_ptr &

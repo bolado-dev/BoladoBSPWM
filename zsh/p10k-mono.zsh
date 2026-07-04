@@ -1,33 +1,38 @@
-# Overrides Powerlevel10k — Tokyo Night · Kali pentester (one-line)
-# ──────────────────────────────────────────────────────────────────
-# Una sola línea, sin marco. Segmentos visibles solo cuando aportan:
-# logo Bolado · user@host · dir · git · target HTB · IP tun0 · ❯
-# Derecha: exit code (sólo error) · duración · reloj
+# Overrides de color/forma para Powerlevel10k: HACKER minimalista.
+# Monocromo (negro/blanco/grises) + acento ÁMBAR + rojo de aviso.
+# Se carga DESPUÉS de ~/.p10k.zsh desde ~/.zshrc, así no hay que tocar
+# el .p10k.zsh (propiedad de root). Para revertir: borra el `source` en .zshrc.
 #
-# Paleta xterm-256: violeta 141 · cyan 117 · verde 46 · ámbar 215 · rojo 210
+# Estilo: BLOQUE LIMPIO de una sola línea (sin marco ┌ └─),
+# icono de carpeta + ruta + git en línea, prompt char ❯ al final.
+# Paleta (xterm-256): ámbar 214/215, grises 234/240/242/245/250, rojo 196.
 
 # ─────────────────────────────────────────────
-#  Elementos del prompt (sin newline → one-line)
+#  Estructura mínima (afilada y compacta)
 # ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(
-  os_icon
-  context
-  dir
-  vcs
-  custom_htb_target
-  prompt_char
-)
-typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(
-  status
-  command_execution_time
-  time
-)
 
-# Sin línea en blanco extra (one-line denso)
-typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=false
+# Todo en una línea: os · dir · git · prompt_char. Estado/tiempo a la derecha.
+typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon dir vcs prompt_char)
+typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time time)
+
+# Una línea en blanco arriba: bloque que respira, limpio.
+typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
 
 # ─────────────────────────────────────────────
-#  Sin marco (sin ╭ ╰ ├)
+#  PLANO: sin fondos de burbuja, sin separadores redondeados
+# ─────────────────────────────────────────────
+
+# Fondo transparente en todos los segmentos (look "lean")
+typeset -g POWERLEVEL9K_BACKGROUND=
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_{LEFT,RIGHT}_WHITESPACE=
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_MIDDLE_WHITESPACE=' '
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SUBSEGMENT_SEPARATOR=' '
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SEGMENT_SEPARATOR=' '
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_PROMPT_FIRST_SEGMENT_START_SYMBOL=
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_PROMPT_LAST_SEGMENT_END_SYMBOL=
+
+# ─────────────────────────────────────────────
+#  UNA sola línea: sin marco ┌ └─ (bloque limpio)
 # ─────────────────────────────────────────────
 typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=
 typeset -g POWERLEVEL9K_MULTILINE_NEWLINE_PROMPT_PREFIX=
@@ -37,98 +42,54 @@ typeset -g POWERLEVEL9K_MULTILINE_NEWLINE_PROMPT_SUFFIX=
 typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_SUFFIX=
 
 # ─────────────────────────────────────────────
-#  Estilo plano (sin pills, separación por espacios simples)
+#  OS icon: logo Bolado, plano y neutro
 # ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_BACKGROUND=
-typeset -g POWERLEVEL9K_{LEFT,RIGHT}_{LEFT,RIGHT}_WHITESPACE=
-typeset -g POWERLEVEL9K_{LEFT,RIGHT}_MIDDLE_WHITESPACE=' '
-typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=' '
-typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=' '
-typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=' '
-typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=' '
-typeset -g POWERLEVEL9K_{LEFT,RIGHT}_PROMPT_FIRST_SEGMENT_START_SYMBOL=
-typeset -g POWERLEVEL9K_{LEFT,RIGHT}_PROMPT_LAST_SEGMENT_END_SYMBOL=
+typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250
+typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=$''   # logo Bolado (U+E800)
 
 # ─────────────────────────────────────────────
-#  OS icon (logo Bolado en violeta)
+#  Directorio: monocromo (blanco/gris), icono de carpeta + ruta
 # ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=103
-typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=$''
-
-# ─────────────────────────────────────────────
-#  Context (user@host) — siempre visible
-#  (anula la línea del .p10k.zsh que oculta el contexto local sin sudo)
-# ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_ALWAYS_SHOW_CONTEXT=true
-typeset -g POWERLEVEL9K_ALWAYS_SHOW_USER=true
-typeset -g POWERLEVEL9K_CONTEXT_TEMPLATE='%n@%m'
-typeset -g POWERLEVEL9K_CONTEXT_DEFAULT_TEMPLATE='%n@%m'
-typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE='%n@%m'
-typeset -g POWERLEVEL9K_CONTEXT_DEFAULT_CONTENT_EXPANSION='${P9K_CONTENT}'
-typeset -g POWERLEVEL9K_CONTEXT_SUDO_CONTENT_EXPANSION='${P9K_CONTENT}'
-typeset -g POWERLEVEL9K_CONTEXT_DEFAULT_VISUAL_IDENTIFIER_EXPANSION=
-typeset -g POWERLEVEL9K_CONTEXT_SUDO_VISUAL_IDENTIFIER_EXPANSION=
-typeset -g POWERLEVEL9K_CONTEXT_PREFIX=
-typeset -g POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND=110
-typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=131
-typeset -g POWERLEVEL9K_CONTEXT_DEFAULT_BACKGROUND=
-typeset -g POWERLEVEL9K_CONTEXT_ROOT_BACKGROUND=
-
-# ─────────────────────────────────────────────
-#  Directorio (compactado a unique)
-# ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_DIR_FOREGROUND=187
-typeset -g POWERLEVEL9K_DIR_SHORTENED_FOREGROUND=60
-typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=103
+typeset -g POWERLEVEL9K_DIR_FOREGROUND=252
+typeset -g POWERLEVEL9K_DIR_SHORTENED_FOREGROUND=242
+typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=231
 typeset -g POWERLEVEL9K_DIR_ANCHOR_BOLD=true
-typeset -g POWERLEVEL9K_DIR_CONTENT_EXPANSION='${P9K_CONTENT}'
+typeset -g POWERLEVEL9K_DIR_CONTENT_EXPANSION='%244F%f ${P9K_CONTENT}'
 
 # ─────────────────────────────────────────────
-#  Git / VCS
+#  Git/VCS: icono de rama + nombre, sin paréntesis; modificados en blanco
 # ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=101
+typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=245
 typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=245
-typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=110
+typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=231
+typeset -g POWERLEVEL9K_VCS_BRANCH_ICON='%244F%f '
 typeset -g POWERLEVEL9K_VCS_CONTENT_EXPANSION='${P9K_CONTENT}'
 
 # ─────────────────────────────────────────────
-#  Custom: Target HTB activo (~/.config/htb_target, formato "IP NAME")
-#  Solo aparece cuando hay target seteado
+#  Estado / tiempo a la derecha: grises discretos
 # ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_CUSTOM_HTB_TARGET="cat \$HOME/.config/htb_target 2>/dev/null"
-typeset -g POWERLEVEL9K_CUSTOM_HTB_TARGET_FOREGROUND=179
-typeset -g POWERLEVEL9K_CUSTOM_HTB_TARGET_VISUAL_IDENTIFIER_EXPANSION='⌖'
-typeset -g POWERLEVEL9K_CUSTOM_HTB_TARGET_BACKGROUND=
-
-# ─────────────────────────────────────────────
-#  Lado derecho
-# ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_STATUS_OK=false
-typeset -g POWERLEVEL9K_STATUS_ERROR=true
-typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=131
-typeset -g POWERLEVEL9K_STATUS_ERROR_VISUAL_IDENTIFIER_EXPANSION='✘'
-
-typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=60
+typeset -g POWERLEVEL9K_STATUS_OK=false                       # no mostrar OK (silencio)
+typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=196
+typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=242
 typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_THRESHOLD=2
-typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_VISUAL_IDENTIFIER_EXPANSION='󰔛'
-
-typeset -g POWERLEVEL9K_TIME_FOREGROUND=60
-typeset -g POWERLEVEL9K_TIME_FORMAT='%D{%H:%M}'
+typeset -g POWERLEVEL9K_TIME_FOREGROUND=240
+typeset -g POWERLEVEL9K_TIME_FORMAT='%D{%H:%M:%S}'
 
 # ─────────────────────────────────────────────
-#  Prompt char ❯ : violeta al ir bien, rojo al fallar
+#  Prompt char ❯ : blanco al ir bien, rojo al fallar
 # ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=103
-typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=131
-typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VIINS_CONTENT_EXPANSION='❯'
-typeset -g POWERLEVEL9K_PROMPT_CHAR_{OK,ERROR}_VICMD_CONTENT_EXPANSION='❮'
+typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=231
+typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=196
+typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_VIINS_CONTENT_EXPANSION='❯'
+typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_VIINS_CONTENT_EXPANSION='❯'
 
 # ─────────────────────────────────────────────
-#  ROOT: acentos en rojo (aviso visual fuerte)
+#  ROOT: mismo estilo afilado pero con acento ROJO (aviso)
+#  (este mismo archivo se sourcea también desde /root)
 # ─────────────────────────────────────────────
 if [[ $EUID -eq 0 ]]; then
-  typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=131
-  typeset -g POWERLEVEL9K_DIR_FOREGROUND=131
-  typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=224
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=131
+  typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=203                                          # logo rojo claro
+  typeset -g POWERLEVEL9K_DIR_FOREGROUND=203                                              # ruta en rojo
+  typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=231
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=196          # prompt char rojo
 fi
