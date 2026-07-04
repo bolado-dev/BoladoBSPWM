@@ -490,8 +490,15 @@ install_scripts() {
 
 reload_services() {
     step "Recargando servicios"
+
+    # bat: reconstruir caché para que reconozca el tema Catppuccin copiado
+    # (no necesita DISPLAY; en Debian el binario es `batcat`, en Arch `bat`)
+    for b in bat batcat; do
+        command -v "$b" >/dev/null 2>&1 && { "$b" cache --build >/dev/null 2>&1 && info "caché de $b reconstruida"; break; }
+    done
+
     if [ -z "${DISPLAY:-}" ]; then
-        warn "Sin DISPLAY: servicios no recargados (ejecuta dentro de X)"; return
+        warn "Sin DISPLAY: servicios gráficos no recargados (ejecuta dentro de X)"; return
     fi
 
     pkill -USR1 sxhkd 2>/dev/null   && info "sxhkd recargado (USR1)"   || info "sxhkd no estaba corriendo"
