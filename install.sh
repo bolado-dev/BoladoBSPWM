@@ -29,7 +29,7 @@ Uso: ./install.sh [opciones]
       --no-root       No configurar el prompt de root
       --no-hardware   No adaptar al hardware (batería/red/monitores/drivers/touchpad)
       --hardware-only Solo re-adaptar al hardware (no copia configs ni instala)
-      --refresh       Actualizar configs y recargar servicios sin reinstalar
+      --refresh       Sobreescribir TODO (configs, zsh/p10k, greeter) y recargar sin reinstalar
       --nvidia        Instalar drivers NVIDIA de forma segura (headers + dkms + picom)
       --dm            Configurar display manager (GDM vs lightdm) sin reinstalar
       --keyboard      Fijar layout es,us permanente en todas las capas del sistema
@@ -576,6 +576,25 @@ install_nvidia() {
     configure_display_manager
 }
 
+apply_greeter_theme() {
+    # Despliega el TEMA del greeter (fondo Senna + mini-greeter.conf + usuario).
+    # Idempotente y reutilizable: lo usan el install completo y --refresh.
+    command -v lightdm-mini-greeter >/dev/null 2>&1 || [ -f /etc/lightdm/lightdm-mini-greeter.conf ] || {
+        info "lightdm-mini-greeter no presente; salto el tema del greeter"; return 0; }
+    step "Aplicando tema del greeter (Senna a juego)"
+    local WP_SRC=""
+    for cand in wp-senna-greeter.png wp-tn-cafe.png wp-kanagawa.png wp-pc.png; do
+        [ -f "$RUTA/Wallpaper/$cand" ] && { WP_SRC="$RUTA/Wallpaper/$cand"; break; }
+    done
+    [ -n "$WP_SRC" ] && sudo install -Dm644 "$WP_SRC" /usr/share/pixmaps/bolado-greeter.png \
+        && ok "fondo greeter → bolado-greeter.png ($(basename "$WP_SRC"))"
+    sudo cp -f "$RUTA/lightdm/lightdm-mini-greeter.conf" /etc/lightdm/lightdm-mini-greeter.conf \
+        && ok "lightdm-mini-greeter.conf sobreescrito" \
+        || die "no se pudo escribir /etc/lightdm/lightdm-mini-greeter.conf"
+    sudo sed -i "s/BOLADO_USER/${USER}/" /etc/lightdm/lightdm-mini-greeter.conf \
+        && ok "greeter: usuario → ${USER}"
+}
+
 _setup_lightdm() {
     # ── 1. lightdm ────────────────────────────────────────────────────
     info "Instalando lightdm..."
@@ -614,21 +633,9 @@ _setup_lightdm() {
         rm -rf "$BUILD_DIR"
     fi
 
-    # ── 3. Wallpaper del greeter (login screen) ──────────────────────
-    # Prefiere el café lo-fi (mismo que usa el escritorio); fallback a wp-pc.png
-    local WP_SRC=""
-    for cand in wp-tn-cafe.png wp-kanagawa.png wp-pc.png; do
-        if [ -f "$RUTA/Wallpaper/$cand" ]; then
-            WP_SRC="$RUTA/Wallpaper/$cand"
-            break
-        fi
-    done
-    local WP_DEST="/usr/share/pixmaps/bolado-bspwm.png"
-    if [ -n "$WP_SRC" ]; then
-        sudo install -Dm644 "$WP_SRC" "$WP_DEST" \
-            && ok "wallpaper login → $WP_DEST ($(basename "$WP_SRC"))" \
-            || warn "no se pudo copiar el wallpaper del greeter"
-    fi
+    # ── 3. Wallpaper + tema del greeter ──────────────────────────────
+    #    (fondo Senna + mini-greeter.conf se aplican vía apply_greeter_theme,
+    #     al final de esta función, para no duplicar lógica con --refresh)
 
     # ── 4. Cambiar display manager ────────────────────────────────────
     local dm_actual
@@ -649,13 +656,8 @@ _setup_lightdm() {
 
     sudo cp -f "$RUTA/lightdm/lightdm.conf" /etc/lightdm/lightdm.conf \
         && ok "lightdm.conf sobreescrito" || die "no se pudo escribir /etc/lightdm/lightdm.conf"
-    sudo cp -f "$RUTA/lightdm/lightdm-mini-greeter.conf" /etc/lightdm/lightdm-mini-greeter.conf \
-        && ok "lightdm-mini-greeter.conf sobreescrito" \
-        || die "no se pudo escribir /etc/lightdm/lightdm-mini-greeter.conf"
-
-    # Sustituir placeholder con el usuario que instaló
-    sudo sed -i "s/BOLADO_USER/${USER}/" /etc/lightdm/lightdm-mini-greeter.conf \
-        && ok "greeter: usuario → ${USER}"
+    # Tema del greeter (fondo Senna + mini-greeter.conf + usuario)
+    apply_greeter_theme
 
     ok "lightdm.conf → greeter: lightdm-mini-greeter · sesión: bspwm"
     ok "tema terminal: #0d0d0d · Monospace · prompt '\$' · user@host + reloj"
@@ -720,7 +722,11 @@ main() {
 
     if [ "$REFRESH_ONLY" -eq 1 ]; then
         DO_HARDWARE=1
-        STEPS=5; copy_configs; set_permissions; setup_keyboard; install_scripts; reload_services; return
+        # Sobreescribe TODO lo que gestiona el repo: configs, zsh/p10k, prompt root,
+        # tema del greeter, permisos, teclado, scripts y recarga de servicios.
+        STEPS=8
+        copy_configs; setup_zsh; setup_root_prompt; apply_greeter_theme
+        set_permissions; setup_keyboard; install_scripts; reload_services; return
     fi
 
     if [ "$HARDWARE_ONLY" -eq 1 ]; then
