@@ -18,7 +18,7 @@ for dev in $(ip -o link show 2>/dev/null \
 done
 
 if [ -n "$IP" ]; then
-	printf '%%{F#957FB8}%s %%{F#DCD7BA}%s%%{u-}\n' "$HTB" "$IP"
+	printf '%%{F#ffb300}%s %%{F#f0f0f0}%s%%{u-}\n' "$HTB" "$IP"
 else
-	printf '%%{F#54546D}%s %%{F#54546D}Disconnected%%{u-}\n' "$HTB"
+	printf '%%{F#5a5a5a}%s %%{F#5a5a5a}Disconnected%%{u-}\n' "$HTB"
 fi

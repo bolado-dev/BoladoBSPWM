@@ -7,9 +7,9 @@ ip_target=$(printf '%s\n'  "$line" | awk '{print $1}')
 name_target=$(printf '%s\n' "$line" | awk '{print $2}')
 
 if [ -n "$ip_target" ] && [ -n "$name_target" ]; then
-    echo "%{F#957FB8}ﲅ %{F#DCD7BA} $ip_target - $name_target"
+    echo "%{F#ffb300}ﲅ %{F#f0f0f0} $ip_target - $name_target"
 elif [ -n "$ip_target" ]; then
-    echo "%{F#957FB8}ﲅ %{F#DCD7BA} $ip_target"
+    echo "%{F#ffb300}ﲅ %{F#f0f0f0} $ip_target"
 else
-    echo "%{F#54546D}ﲅ %{F#54546D} No target"
+    echo "%{F#5a5a5a}ﲅ %{F#5a5a5a} No target"
 fi
