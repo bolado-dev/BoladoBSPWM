@@ -1,0 +1,63 @@
+[general]
+
+live-config = 0
+framerate = 60
+
+autosens = 1
+; sensitivity = 100
+bars = 0
+bar_width = 0
+bar_spacing = 1
+center_align = 1
+max_height = 100
+
+
+[input]
+
+[output]
+
+method = noncurses
+orientation = horizontal
+
+reverse = 1
+
+horizontal_stereo = 0
+left_bottom = 0
+
+synchronized_sync = 0
+
+show_idle_bar_heads = 0
+waveform = 0
+
+[color]
+
+# Gradiente Catppuccin Mocha (a juego con kitty)
+gradient = 1
+gradient_color_1 = '#94e2d5'
+gradient_color_2 = '#89dceb'
+gradient_color_3 = '#89b4fa'
+gradient_color_4 = '#b4befe'
+gradient_color_5 = '#cba6f7'
+gradient_color_6 = '#f5c2e7'
+gradient_color_7 = '#eba0ac'
+gradient_color_8 = '#f38ba8'
+
+horizontal_gradient = 1
+horizontal_gradient_color_1 = '#94e2d5'
+horizontal_gradient_color_2 = '#89dceb'
+horizontal_gradient_color_3 = '#89b4fa'
+horizontal_gradient_color_4 = '#b4befe'
+horizontal_gradient_color_5 = '#cba6f7'
+horizontal_gradient_color_6 = '#f5c2e7'
+horizontal_gradient_color_7 = '#eba0ac'
+horizontal_gradient_color_8 = '#f38ba8'
+
+blend_direction = 'up'
+
+theme = 'gh0stzk'
+
+[smoothing]
+
+monstercat = 0
+waves = 0
+noise_reduction = 80
