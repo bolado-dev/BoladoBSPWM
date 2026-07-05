@@ -439,6 +439,16 @@ adapt_hardware() {
                 read -rp "  → ¿Cuál es el monitor PRIMARIO? [1]: " sel; fi
             sel=${sel:-1}; primary="${mons[$((sel-1))]}"; [ -z "$primary" ] && primary="${mons[0]}"
             xrandr --output "$primary" --auto --primary 2>/dev/null
+            # NVIDIA + DisplayPort: el output puede quedar "connected primary"
+            # SIN geometría porque la negociación DP tarda unos ms. Reintentamos
+            # --auto hasta 4 veces (~2 s) para que el layout guardado sea correcto.
+            local _t=4
+            while [ $_t -gt 0 ]; do
+                xrandr --query 2>/dev/null | grep -q " connected primary [0-9]" && break
+                sleep 0.5
+                xrandr --output "$primary" --auto --primary 2>/dev/null
+                _t=$((_t - 1))
+            done
             info "primario: $primary → desktops I-V"
 
             # 2) arandr para colocar arrastrando; al pulsar «Aplicar» se cierra solo y se guarda
@@ -458,10 +468,17 @@ adapt_hardware() {
             xrandr --output "$primary" --primary 2>/dev/null   # reasegurar primario tras arandr
 
             # 3) Guardar layout (autorandr lo auto-aplica al arrancar o al (des)conectar)
+            #    Solo guardamos si TODOS los outputs conectados tienen modo. Si
+            #    alguno quedó "connected (…" sin geometría (handshake DP incompleto)
+            #    persistiríamos un layout roto que apagaría ese monitor en cada login.
             if command -v autorandr >/dev/null; then
-                autorandr --save default --force >/dev/null 2>&1 \
-                    && info "layout guardado (autorandr «default»)" \
-                    || warn "no se pudo guardar el layout con autorandr"
+                if xrandr --query 2>/dev/null | grep -Eq ' connected( primary)? \('; then
+                    warn "algún output conectado quedó sin modo — NO guardo autorandr (evito persistir layout parcial). Reintenta el instalador o corre 'autorandr --save default --force' cuando estén todas encendidas."
+                else
+                    autorandr --save default --force >/dev/null 2>&1 \
+                        && info "layout guardado (autorandr «default»)" \
+                        || warn "no se pudo guardar el layout con autorandr"
+                fi
             else
                 warn "autorandr no está instalado: el layout no se auto-aplicará"
             fi
