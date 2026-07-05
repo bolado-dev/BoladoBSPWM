@@ -1,13 +1,39 @@
-# Overrides de forma/color para Powerlevel10k — estilo PILL monocromo.
-# Se carga DESPUÉS de ~/.p10k.zsh desde ~/.zshrc (no toca el .p10k.zsh de root).
+# Overrides de color/forma para Powerlevel10k: HACKER minimalista.
+# Monocromo (negro/blanco/grises) + acento ÁMBAR + rojo de aviso.
+# Se carga DESPUÉS de ~/.p10k.zsh desde ~/.zshrc, así no hay que tocar
+# el .p10k.zsh (propiedad de root). Para revertir: borra el `source` en .zshrc.
 #
-# Estilo: una línea. IZQUIERDA = cápsula con fondo (grises + acento ÁMBAR),
-# extremos redondeados. DERECHA = plana (estado/tiempo en grises).
+# Estilo: BLOQUE LIMPIO de una sola línea (sin marco ┌ └─),
+# icono de carpeta + ruta + git en línea, prompt char ❯ al final.
+# Paleta (xterm-256): ámbar 214/215, grises 234/240/242/245/250, rojo 196.
 
+# ─────────────────────────────────────────────
+#  Estructura mínima (afilada y compacta)
+# ─────────────────────────────────────────────
+
+# Todo en una línea: os · dir · git · prompt_char. Estado/tiempo a la derecha.
 typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(os_icon dir vcs prompt_char)
 typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time time)
+
+# Una línea en blanco arriba: bloque que respira, limpio.
 typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=true
 
+# ─────────────────────────────────────────────
+#  PLANO: sin fondos de burbuja, sin separadores redondeados
+# ─────────────────────────────────────────────
+
+# Fondo transparente en todos los segmentos (look "lean")
+typeset -g POWERLEVEL9K_BACKGROUND=
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_{LEFT,RIGHT}_WHITESPACE=
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_MIDDLE_WHITESPACE=' '
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SUBSEGMENT_SEPARATOR=' '
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SEGMENT_SEPARATOR=' '
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_PROMPT_FIRST_SEGMENT_START_SYMBOL=
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_PROMPT_LAST_SEGMENT_END_SYMBOL=
+
+# ─────────────────────────────────────────────
+#  UNA sola línea: sin marco ┌ └─ (bloque limpio)
+# ─────────────────────────────────────────────
 typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX=
 typeset -g POWERLEVEL9K_MULTILINE_NEWLINE_PROMPT_PREFIX=
 typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_PREFIX=
@@ -15,71 +41,55 @@ typeset -g POWERLEVEL9K_MULTILINE_FIRST_PROMPT_SUFFIX=
 typeset -g POWERLEVEL9K_MULTILINE_NEWLINE_PROMPT_SUFFIX=
 typeset -g POWERLEVEL9K_MULTILINE_LAST_PROMPT_SUFFIX=
 
-# PILL: izquierda cápsula redondeada; derecha plana
-typeset -g POWERLEVEL9K_LEFT_PROMPT_FIRST_SEGMENT_START_SYMBOL=''
-typeset -g POWERLEVEL9K_LEFT_PROMPT_LAST_SEGMENT_END_SYMBOL=''
-typeset -g POWERLEVEL9K_LEFT_SEGMENT_SEPARATOR=
-typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR=
-typeset -g POWERLEVEL9K_RIGHT_PROMPT_FIRST_SEGMENT_START_SYMBOL=
-typeset -g POWERLEVEL9K_RIGHT_PROMPT_LAST_SEGMENT_END_SYMBOL=
-typeset -g POWERLEVEL9K_RIGHT_SEGMENT_SEPARATOR=' '
-typeset -g POWERLEVEL9K_RIGHT_SUBSEGMENT_SEPARATOR=' '
-
-# OS icon: logo Bolado, fondo gris, glifo ámbar
-typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=237
+# ─────────────────────────────────────────────
+#  OS icon: logo Bolado, plano y neutro
+# ─────────────────────────────────────────────
 typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=250
-typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=''
+typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION=$''   # logo Bolado (U+E800)
 
-# Directorio
-typeset -g POWERLEVEL9K_DIR_BACKGROUND=237
+# ─────────────────────────────────────────────
+#  Directorio: monocromo (blanco/gris), icono de carpeta + ruta
+# ─────────────────────────────────────────────
 typeset -g POWERLEVEL9K_DIR_FOREGROUND=252
-typeset -g POWERLEVEL9K_DIR_SHORTENED_FOREGROUND=245
+typeset -g POWERLEVEL9K_DIR_SHORTENED_FOREGROUND=242
 typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=231
 typeset -g POWERLEVEL9K_DIR_ANCHOR_BOLD=true
-typeset -g POWERLEVEL9K_DIR_CONTENT_EXPANSION='${P9K_CONTENT}'
-typeset -g POWERLEVEL9K_DIR_VISUAL_IDENTIFIER_EXPANSION=
+typeset -g POWERLEVEL9K_DIR_CONTENT_EXPANSION='%244F%f ${P9K_CONTENT}'
 
-# Git/VCS
-typeset -g POWERLEVEL9K_VCS_CLEAN_BACKGROUND=237
-typeset -g POWERLEVEL9K_VCS_UNTRACKED_BACKGROUND=237
-typeset -g POWERLEVEL9K_VCS_MODIFIED_BACKGROUND=237
-typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=250
-typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=250
+# ─────────────────────────────────────────────
+#  Git/VCS: icono de rama + nombre, sin paréntesis; modificados en blanco
+# ─────────────────────────────────────────────
+typeset -g POWERLEVEL9K_VCS_CLEAN_FOREGROUND=245
+typeset -g POWERLEVEL9K_VCS_UNTRACKED_FOREGROUND=245
 typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=231
-typeset -g POWERLEVEL9K_VCS_VISUAL_IDENTIFIER_COLOR=245
-typeset -g POWERLEVEL9K_VCS_DISABLE_GITSTATUS_FORMATTING=false
+typeset -g POWERLEVEL9K_VCS_BRANCH_ICON='%244F%f '
+typeset -g POWERLEVEL9K_VCS_CONTENT_EXPANSION='${P9K_CONTENT}'
 
-# Prompt char dentro de la cápsula
-typeset -g POWERLEVEL9K_PROMPT_CHAR_BACKGROUND=237
+# ─────────────────────────────────────────────
+#  Estado / tiempo a la derecha: grises discretos
+# ─────────────────────────────────────────────
+typeset -g POWERLEVEL9K_STATUS_OK=false                       # no mostrar OK (silencio)
+typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=196
+typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=242
+typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_THRESHOLD=2
+typeset -g POWERLEVEL9K_TIME_FOREGROUND=240
+typeset -g POWERLEVEL9K_TIME_FORMAT='%D{%H:%M:%S}'
+
+# ─────────────────────────────────────────────
+#  Prompt char ❯ : blanco al ir bien, rojo al fallar
+# ─────────────────────────────────────────────
 typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=231
 typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=196
 typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_VIINS_CONTENT_EXPANSION='❯'
 typeset -g POWERLEVEL9K_PROMPT_CHAR_ERROR_VIINS_CONTENT_EXPANSION='❯'
 
-# Derecha plana
-typeset -g POWERLEVEL9K_STATUS_OK=false
-typeset -g POWERLEVEL9K_STATUS_ERROR_FOREGROUND=196
-typeset -g POWERLEVEL9K_STATUS_ERROR_BACKGROUND=
-typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=242
-typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_BACKGROUND=
-typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_THRESHOLD=2
-typeset -g POWERLEVEL9K_TIME_FOREGROUND=240
-typeset -g POWERLEVEL9K_TIME_BACKGROUND=
-typeset -g POWERLEVEL9K_TIME_FORMAT='%D{%H:%M:%S}'
-
-# ROOT: acentos rojos
+# ─────────────────────────────────────────────
+#  ROOT: mismo estilo afilado pero con acento ROJO (aviso)
+#  (este mismo archivo se sourcea también desde /root)
+# ─────────────────────────────────────────────
 if [[ $EUID -eq 0 ]]; then
-  typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=203
+  typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=203                                          # logo rojo claro
+  typeset -g POWERLEVEL9K_DIR_FOREGROUND=203                                              # ruta en rojo
   typeset -g POWERLEVEL9K_DIR_ANCHOR_FOREGROUND=231
-  typeset -g POWERLEVEL9K_VCS_MODIFIED_FOREGROUND=203
-  typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=203
+  typeset -g POWERLEVEL9K_PROMPT_CHAR_OK_{VIINS,VICMD,VIVIS,VIOWR}_FOREGROUND=196          # prompt char rojo
 fi
-
-# ─────────────────────────────────────────────
-#  Limpieza de restos del .p10k.zsh base
-# ─────────────────────────────────────────────
-typeset -g POWERLEVEL9K_VCS_PREFIX=                     # sin "on "
-typeset -g POWERLEVEL9K_TIME_PREFIX=                    # sin "at "
-
-# no desactivar vcs por directorio (el base lo ponia en ~)
-typeset -g POWERLEVEL9K_VCS_DISABLED_WORKDIR_PATTERN=
