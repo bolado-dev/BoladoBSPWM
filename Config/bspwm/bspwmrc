@@ -17,6 +17,17 @@ setxkbmap -layout es,us -model pc105 -option grp:alt_shift_toggle
 # Va ANTES de asignar desktops para que ya existan todos los monitores.
 autorandr --change 2>/dev/null
 
+# NVIDIA + DisplayPort: el output puede aparecer "connected primary" pero sin
+# geometría (mode) porque el handshake DP tarda unos ms más que el arranque de
+# bspwm. Si detectamos primary sin resolución, reintentamos --load default hasta
+# 4 veces (~2 s en total). Si no hay primary, salimos (no hay nada que reintentar).
+for _i in 1 2 3 4; do
+    xrandr --query 2>/dev/null | grep -q ' connected primary [0-9]' && break
+    sleep 0.5
+    autorandr --load default --force 2>/dev/null
+done
+unset _i
+
 # Reparto de desktops por monitor:
 #   1 monitor  → los 10 (I..X) en él
 #   2 monitores → 5+5, primary primero (I..V primary, VI..X secundario)
