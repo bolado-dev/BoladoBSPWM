@@ -17,7 +17,51 @@ setxkbmap -layout es,us -model pc105 -option grp:alt_shift_toggle
 # Va ANTES de asignar desktops para que ya existan todos los monitores.
 autorandr --change 2>/dev/null
 
-bspc monitor -d I II III IV V VI VII VIII IX X
+# Reparto de desktops por monitor:
+#   1 monitor  → los 10 (I..X) en él
+#   2 monitores → 5+5, primary primero (I..V primary, VI..X secundario)
+#   N monitores → división uniforme, primary primero
+# `bspc monitor -d …` sin -m aplica al monitor "actual" y por eso antes se iban
+# los 10 al que arrancara primero (típicamente el HDMI). Aquí forzamos el -m.
+_desktops="I II III IV V VI VII VIII IX X"
+_mons=$(bspc query -M --names)
+_count=$(printf '%s\n' "$_mons" | grep -c .)
+_primary=$(xrandr --query 2>/dev/null | awk '/ connected primary/ {print $1; exit}')
+
+if [ "$_count" -le 1 ]; then
+    bspc monitor -d $_desktops
+elif [ "$_count" -eq 2 ]; then
+    _secondary=$(printf '%s\n' "$_mons" | grep -vx "$_primary" | head -n1)
+    [ -z "$_primary" ] && _primary=$(printf '%s\n' "$_mons" | sed -n '1p')
+    [ -z "$_secondary" ] && _secondary=$(printf '%s\n' "$_mons" | sed -n '2p')
+    bspc monitor "$_primary"   -d I II III IV V
+    bspc monitor "$_secondary" -d VI VII VIII IX X
+else
+    # 3+ monitores: reparto uniforme (los sobrantes al primario)
+    _per=$(( 10 / _count ))
+    _rest=$(( 10 - _per * _count ))
+    _idx=1
+    # ordena poniendo primary al inicio
+    _ordered=$(printf '%s\n' "$_primary"; printf '%s\n' "$_mons" | grep -vx "$_primary")
+    for m in $_ordered; do
+        [ -z "$m" ] && continue
+        _take=$_per
+        [ $_rest -gt 0 ] && _take=$((_take+1)) && _rest=$((_rest-1))
+        _slice=""
+        _end=$((_idx + _take - 1))
+        while [ $_idx -le $_end ]; do
+            _slice="$_slice $(echo $_desktops | cut -d' ' -f$_idx)"
+            _idx=$((_idx+1))
+        done
+        bspc monitor "$m" -d $_slice
+    done
+    unset _per _rest _idx _ordered _take _slice _end m
+fi
+
+# Enfoca el primary (o el primero) para que ahí caigan las apps nuevas
+[ -n "$_primary" ] && bspc monitor -f "$_primary" 2>/dev/null
+
+unset _desktops _mons _count _primary _secondary
 
 bspc config border_width         0
 bspc config window_gap           6
