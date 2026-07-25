@@ -113,7 +113,7 @@ bspc rule -a float-help state=floating center=on
 
 
 # WALLPAPER
-feh --bg-fill ~/Imágenes/wp-senna.png
+feh --bg-fill ~/Imágenes/wp-pc.png
 
 # POLYBAR
 ~/.config/polybar/launch.sh
